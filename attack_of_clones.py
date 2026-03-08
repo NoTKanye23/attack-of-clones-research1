@@ -1,5 +1,7 @@
 import subprocess
 import sys
+from signature_ranker import rank_signatures
+
 
 def extract_signature(patch):
     result = subprocess.run(
@@ -9,7 +11,6 @@ def extract_signature(patch):
     )
 
     lines = result.stdout.split("\n")
-
     signatures = []
 
     for line in lines:
@@ -19,8 +20,15 @@ def extract_signature(patch):
     return signatures
 
 
-def search_archive(signature):
-    subprocess.run(["python3", "codesearch_query.py", signature])
+def search_signature(sig):
+    result = subprocess.run(
+        ["python3", "codesearch_query.py", sig],
+        capture_output=True,
+        text=True
+    )
+
+    print("\nSearching Debian archive...\n")
+    print(result.stdout)
 
 
 def main():
@@ -35,13 +43,22 @@ def main():
 
     signatures = extract_signature(patch)
 
-    for s in signatures:
+    # rank signatures
+    ranked = rank_signatures(signatures)
 
-        print("\nSignature:", s)
+    print("\n=== Ranked Signatures ===\n")
 
-        print("\nSearching Debian archive...\n")
+    for sig, score in ranked:
+        print(f"{sig}  -> score {score:.2f}")
 
-        search_archive(s)
+    # search only top 5 signatures
+    print("\n=== Searching top signatures ===\n")
+
+    top = [sig for sig, score in ranked[:5]]
+
+    for sig in top:
+        print(f"\nSignature: {sig}")
+        search_signature(sig)
 
 
 if __name__ == "__main__":
