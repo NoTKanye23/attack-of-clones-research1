@@ -33,3 +33,46 @@ Attack of the Clones workflow.
 Pipeline:
 
 Patch -> Signature Extraction -> Debian CodeSearch Query -> Candidate Clone Locations
+
+**Attack of the Clones** workflow.
+
+Pipeline:
+
+Security Patch  
+↓  
+Signature Extraction (`clone_detector.py`)  
+↓  
+Archive Search (`codesearch_query.py`)  
+↓  
+Clone Candidates in Debian Archive  
+
+---
+
+## Usage Example
+
+Run the complete pipeline using:
+
+```bash
+python attack_of_clones.py path/to/patch.patch
+```
+
+Example:
+
+```bash
+python attack_of_clones.py ../88cf9dbb48f6e172629795ecffae35d5052f68aa.patch.1
+```
+
+Example output:
+
+```
+=== Extracting signatures ===
+
+Signature: MAX_SAMPLES
+
+Searching Debian archive...
+
+Top matches:
+https://codesearch.debian.net/src/gallium/drivers/llvmpipe/lp_state_fs.c
+https://codesearch.debian.net/src/gallium/drivers/llvmpipe/lp_state_fs.h
+```
+
