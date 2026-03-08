@@ -2,7 +2,16 @@ import requests
 import sys
 import re
 
+
+def clean_query(q):
+    # remove special characters that break CodeSearch queries
+    return re.sub(r'[^a-zA-Z0-9_]', ' ', q)
+
+
 def search_codesearch(pattern):
+
+    # sanitize the query BEFORE sending it
+    pattern = clean_query(pattern)
 
     url = "https://codesearch.debian.net/search"
 

@@ -1,11 +1,5 @@
-import sys
 import re
-
-
-tokens = re.findall(r'[A-Z_]{4,}', code)
-
-for t in tokens:
-    signatures.append(t)
+import sys
 
 def extract_added_lines(patch_file):
     signatures = []
@@ -15,38 +9,29 @@ def extract_added_lines(patch_file):
             if line.startswith("+") and not line.startswith("+++"):
                 code = line[1:].strip()
 
-                if len(code) > 5:
+                # extract uppercase tokens (macros, constants)
+                tokens = re.findall(r'[A-Z_]{4,}', code)
+                signatures.extend(tokens)
+
+                # also keep control-flow patterns
+                if "for (" in code or "if (" in code:
                     signatures.append(code)
 
-    return signatures
-
-
-def generate_regex_patterns(signatures):
-    patterns = []
-
-    for s in signatures:
-        s = re.escape(s)
-        s = s.replace(r"\ ", r"\s+")
-        patterns.append(s)
-
-    return patterns
+    return list(set(signatures))
 
 
 def main():
-
     if len(sys.argv) < 2:
         print("Usage: python clone_detector.py patch.patch")
         return
 
     patch = sys.argv[1]
-
     signatures = extract_added_lines(patch)
-    patterns = generate_regex_patterns(signatures)
 
     print("\nExtracted Signatures:\n")
 
-    for p in patterns:
-        print(p)
+    for s in signatures:
+        print(s)
 
 
 if __name__ == "__main__":

@@ -2,6 +2,7 @@ import subprocess
 import sys
 from signature_ranker import rank_signatures
 from signature_filter import filter_signatures
+from signature_generalizer import generalize_signatures
 
 def extract_signature(patch):
     result = subprocess.run(
@@ -51,6 +52,11 @@ def main():
 
     print("\n=== After Noise Filtering ===\n")
     print(len(signatures), "signatures remaining")
+    
+    signatures = generalize_signatures(signatures)
+    print("\n=== Generalized Signatures ===\n")
+    for s in signatures:
+       print(s)
     # rank signatures
     ranked = rank_signatures(signatures)
 
