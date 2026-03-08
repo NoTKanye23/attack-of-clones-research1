@@ -66,3 +66,17 @@ Macro-based signatures like MAX_SAMPLES produce matches in unrelated
 packages such as Mesa. This suggests that simple token-level signatures
 can introduce noise. More contextual signatures (control-flow patterns
 or API combinations) may improve detection precision
+
+Observation
+
+Full-line regex signatures extracted directly from patches
+are often too specific and may fail to match similar code
+in other packages. Token-level signatures such as macro
+names (e.g. MAX_SAMPLES) produce broader matches but also
+increase noise.
+
+This suggests the need for a multi-level signature system
+combining:
+- control-flow patterns
+- API usage
+- macro tokens

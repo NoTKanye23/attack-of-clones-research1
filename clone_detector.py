@@ -1,6 +1,12 @@
 import sys
 import re
 
+
+tokens = re.findall(r'[A-Z_]{4,}', code)
+
+for t in tokens:
+    signatures.append(t)
+
 def extract_added_lines(patch_file):
     signatures = []
 
