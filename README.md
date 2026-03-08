@@ -24,3 +24,18 @@ Automatically detect vulnerable code patterns across the Debian package archive 
 1. NULL pointer dereference (APT)
 2. Stack overflow (libtiff)
 3. Input validation bug (libvips)
+
+## Prototype Pipeline
+
+This repository implements a preliminary prototype of the
+Attack of the Clones workflow.
+
+Pipeline:
+
+Patch
+  ↓
+Signature Extraction
+  ↓
+Debian CodeSearch Query
+  ↓
+Candidate Clone Locations
