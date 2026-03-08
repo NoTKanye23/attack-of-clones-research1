@@ -86,4 +86,29 @@ Top matches:
 https://codesearch.debian.net/src/gallium/drivers/llvmpipe/lp_state_fs.c
 https://codesearch.debian.net/src/gallium/drivers/llvmpipe/lp_state_fs.h
 ```
+## Security Patches Used in Experiments
 
+The preliminary experiments were performed on real patches from the Debian Security Tracker:
+
+1. **APT nullptr vulnerability**
+   https://security-tracker.debian.org/tracker/source-package/apt
+
+2. **libtiff overflow**
+   https://security-tracker.debian.org/tracker/source-package/tiff
+
+3. **libvips validation issue**
+   https://security-tracker.debian.org/tracker/source-package/libvips
+
+4. **rollup path normalization patch**
+   https://github.com/rollup/rollup
+
+These patches were used to extract candidate vulnerability signatures.
+
+## Next Steps
+
+Future improvements planned for the prototype:
+
+- Improve signature extraction (detect pointer misuse and boundary checks)
+- Reduce noise in CodeSearch results
+- Introduce probabilistic scoring for candidate clones
+- Explore Bloom filters or ML-based filtering for large-scale detection
