@@ -3,7 +3,6 @@
 ## Objective
 Evaluate feasibility of deriving code search signatures from security patches.
 
----
 
 ## Experiment 1 – NULL Pointer Dereference
 
@@ -18,7 +17,6 @@ Candidate signatures:
 Observation:
 ...
 
----
 
 ## Experiment 2 – Stack Overflow (libtiff)
 
@@ -30,7 +28,6 @@ for (s = 0; (s < spp) && (s < MAX_SAMPLES); s++)
 Observation:
 Macro-based signatures produce high noise.
 
----
 
 ## Experiment 3 – Input Validation (libvips)
 
