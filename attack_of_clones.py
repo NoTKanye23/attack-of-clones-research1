@@ -1,35 +1,11 @@
-import subprocess
 import sys
+
+from clone_detector import extract_signatures_from_patch
 from signature_ranker import rank_signatures
 from signature_filter import filter_signatures
 from signature_generalizer import generalize_signatures
-
-def extract_signature(patch):
-    result = subprocess.run(
-        ["python3", "clone_detector.py", patch],
-        capture_output=True,
-        text=True
-    )
-
-    lines = result.stdout.split("\n")
-    signatures = []
-
-    for line in lines:
-        if line.strip() and "Extracted" not in line:
-            signatures.append(line.strip())
-
-    return signatures
-
-
-def search_signature(sig):
-    result = subprocess.run(
-        ["python3", "codesearch_query.py", sig],
-        capture_output=True,
-        text=True
-    )
-
-    print("\nSearching Debian archive...\n")
-    print(result.stdout)
+from clone_similarity import rank_candidates
+from codesearch_query import search_codesearch
 
 
 def main():
@@ -42,8 +18,7 @@ def main():
 
     print("\n=== Extracting signatures ===\n")
 
-    signatures = extract_signature(patch)
-    signatures = extract_signature(patch)
+    signatures = extract_signatures_from_patch(patch)
 
     print("\n=== Raw Signatures ===\n")
     print(len(signatures), "signatures extracted")
@@ -52,27 +27,40 @@ def main():
 
     print("\n=== After Noise Filtering ===\n")
     print(len(signatures), "signatures remaining")
-    
-    signatures = generalize_signatures(signatures)
+
+    generalized = generalize_signatures(signatures)
+
     print("\n=== Generalized Signatures ===\n")
-    for s in signatures:
-       print(s)
-    # rank signatures
-    ranked = rank_signatures(signatures)
+
+    for s in generalized:
+        print(s)
+
+    ranked = rank_signatures(generalized)
 
     print("\n=== Ranked Signatures ===\n")
 
     for sig, score in ranked:
-        print(f"{sig}  -> score {score:.2f}")
+        print(f"{sig} -> score {score:.2f}")
 
-    # search only top 5 signatures
     print("\n=== Searching top signatures ===\n")
 
-    top = [sig for sig, score in ranked[:5]]
+    top = ranked[:5]
 
-    for sig in top:
+    for sig, score in top:
+
         print(f"\nSignature: {sig}")
-        search_signature(sig)
+
+        results = search_codesearch(sig)
+
+        if not results:
+            continue
+
+        ranked_candidates = rank_candidates(sig, results)
+
+        print("\nTop Similar Candidates:\n")
+
+        for r, s in ranked_candidates[:5]:
+            print(s, r)
 
 
 if __name__ == "__main__":

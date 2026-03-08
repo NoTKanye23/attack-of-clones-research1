@@ -1,38 +1,39 @@
 import re
-import sys
 
-def extract_added_lines(patch_file):
-    signatures = []
+
+def extract_signatures_from_patch(patch_file):
+    """
+    Extract potential vulnerability signatures from patch.
+    """
+
+    signatures = set()
 
     with open(patch_file, "r", errors="ignore") as f:
         for line in f:
-            if line.startswith("+") and not line.startswith("+++"):
-                code = line[1:].strip()
 
-                # extract uppercase tokens (macros, constants)
-                tokens = re.findall(r'[A-Z_]{4,}', code)
-                signatures.extend(tokens)
+            if not line.startswith("+") or line.startswith("+++"):
+                continue
 
-                # also keep control-flow patterns
-                if "for (" in code or "if (" in code:
-                    signatures.append(code)
+            code = line[1:].strip()
 
-    return list(set(signatures))
+            if not code:
+                continue
 
+            # extract macros / constants
+            macros = re.findall(r'\b[A-Z_]{4,}\b', code)
+            signatures.update(macros)
 
-def main():
-    if len(sys.argv) < 2:
-        print("Usage: python clone_detector.py patch.patch")
-        return
+            # control flow conditions
+            if re.search(r'\b(if|for|while)\s*\(', code):
+                signatures.add(code)
 
-    patch = sys.argv[1]
-    signatures = extract_added_lines(patch)
+            # function calls
+            func_calls = re.findall(r'\b[A-Za-z_][A-Za-z0-9_]*\s*\(', code)
+            for fc in func_calls:
+                signatures.add(fc.strip())
 
-    print("\nExtracted Signatures:\n")
+            # boundary checks
+            if re.search(r'[<>]=?', code):
+                signatures.add(code)
 
-    for s in signatures:
-        print(s)
-
-
-if __name__ == "__main__":
-    main()
+    return list(signatures)

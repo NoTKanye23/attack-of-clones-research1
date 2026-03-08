@@ -19,11 +19,33 @@ Automatically detect vulnerable code patterns across the Debian package archive 
 - Experiments on multiple CVEs
 - Observations on noise vs precision
 
-## Experiments
+## Preliminary Experiments
 
-1. NULL pointer dereference (APT)
-2. Stack overflow (libtiff)
-3. Input validation bug (libvips)
+To evaluate the feasibility of detecting vulnerability clones using patch-derived signatures, several preliminary experiments were conducted using real patches from the Debian Security Tracker.
+
+### 1. APT Null Pointer Vulnerability
+Tested extraction of API-based and control-flow signatures from an APT patch.  
+This experiment demonstrated that combining API signatures with control-flow conditions can produce meaningful matches in the Debian archive.
+
+### 2. libtiff Integer Overflow
+Evaluated macro-based signatures such as `MAX_SAMPLES`.  
+Results showed that macro identifiers can produce many matches, but they often introduce noise when the macro name is reused across unrelated projects.
+
+### 3. libvips Validation Logic
+Focused on validation-related signatures.  
+This experiment showed that project-specific APIs may fail to generalize across the Debian archive.
+
+### 4. rollup Regex-Based Patch
+Analyzed a patch involving path normalization and regex-related logic.  
+The experiment revealed that signatures derived from project-specific identifiers often produce zero matches, highlighting limitations of overly specific token-based signatures.
+
+### 5. Generalized Signature Experiment
+Tested a prototype generalization step where variable identifiers were replaced with abstract tokens (e.g., `VAR`, `NUM`).  
+The results showed that generalized signatures can help with ranking similarity between candidates, but they are too abstract to be used directly for archive search.
+
+These experiments informed the final prototype pipeline:
+
+Patch -> Signature Extraction -> Filtering -> Generalization -> Ranking ->  CodeSearch -> Candidate Clone Detection
 
 ## Prototype Pipeline
 
@@ -32,19 +54,8 @@ Attack of the Clones workflow.
 
 Pipeline:
 
-Patch -> Signature Extraction -> Debian CodeSearch Query -> Candidate Clone Locations
+Patch -> Signature Extraction (clone_detector.py) -> Signature Filtering -> Signature Generalization -> Signature Ranking -> Debian CodeSearch Query -> Candidate clone detection
 
-**Attack of the Clones** workflow.
-
-Pipeline:
-
-Security Patch  
-↓  
-Signature Extraction (`clone_detector.py`)  
-↓  
-Archive Search (`codesearch_query.py`)  
-↓  
-Clone Candidates in Debian Archive  
 
 ---
 
