@@ -32,10 +32,4 @@ Attack of the Clones workflow.
 
 Pipeline:
 
-Patch
-  ↓
-Signature Extraction
-  ↓
-Debian CodeSearch Query
-  ↓
-Candidate Clone Locations
+Patch -> Signature Extraction -> Debian CodeSearch Query -> Candidate Clone Locations
