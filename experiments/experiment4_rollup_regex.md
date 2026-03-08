@@ -13,18 +13,23 @@ Patch Link:
 https://github.com/rollup/rollup/commit/c60770d7aaf750e512c1b2774989ea4596e660b2
 
 Patch Fragment Extracted:
-<insert line extracted from patch>
+
+if (normalized.length > 0 && normalized[normalized.length - 1] !== '..')
 
 Candidate Signatures:
-regex
-function name
-API call
+
+normalized.length
+normalized[normalized.length - 1] !== '..'
+PATH_TRAVERSAL
+isFileNameOutsideOutputDirectory
 
 Search Platform:
 https://codesearch.debian.net
 
-Matches Found:
-<list results returned by codesearch>
+Matches Found: 0
+
+Estimated False Positives: 0  
+Estimated True Positives: 0
 
 Observation:
 Regex-related signatures produced several matches but also
@@ -49,3 +54,11 @@ This suggests that an effective clone detection pipeline should
 combine multiple signature types (tokens, control-flow patterns,
 and API usage) and rank them by their generality to balance
 precision and recall.
+
+Implication:
+
+Regex-based signatures are unlikely to detect cross-project
+vulnerability clones unless the underlying logic appears
+in multiple codebases.
+
+

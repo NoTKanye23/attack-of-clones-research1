@@ -1,4 +1,4 @@
-# Experiment 2: libtiff Stack Overflow# Experiment 2: Stack Overflow Detection from Security Patch
+# Experiment 2: libtiff Stack Overflow
 
 CVE:
 CVE-2025-61144
@@ -6,77 +6,66 @@ CVE-2025-61144
 Project:
 libtiff
 
-Vulnerability Type:
-Stack overflow caused by missing bounds check in loop iteration.
+Bug Type:
+Stack overflow due to missing bounds check.
 
 Patch Source:
 https://gitlab.com/libtiff/libtiff/-/commit/88cf9dbb48f6e172629795ecffae35d5052f68aa
 
 Patch Fragment Extracted:
+
 for (s = 0; (s < spp) && (s < MAX_SAMPLES); s++)
 
 Candidate Signatures:
+
 MAX_SAMPLES
 s < spp
 for (s = 0
+
 
 Search Platform:
 https://codesearch.debian.net
 
 Matches Found:
-mesa_26.0.1-2/src/gallium/drivers/llvmpipe/lp_state_fs.c
-mesa_26.0.1-2/src/gallium/drivers/llvmpipe/lp_state_fs.h
+
+mesa_26.0.1-2/src/gallium/drivers/llvmpipe/lp_state_fs.c  
+mesa_26.0.1-2/src/gallium/drivers/llvmpipe/lp_state_fs.h  
 mesa_26.0.1-2/src/gallium/drivers/llvmpipe/lp_setup_context.h
 
-Observation:
-Token-level signatures such as "MAX_SAMPLES" generate matches in unrelated
-projects (e.g., Mesa). This indicates that simple lexical signatures
-introduce significant noise.
+Matches Found: 3
 
-More precise signatures based on control-flow structure or semantic
-patterns (e.g., loop bounds checks) may improve detection accuracy.
+Estimated False Positives: 3  
+Estimated True Positives: 0
 
-Patch Source:
-CVE-2025-61144
-
-Repository:
-libtiff
-
-Bug Type:
-Stack overflow
-
-Patch Fragment Extracted:
-for (s = 0; (s < spp) && (s < MAX_SAMPLES); s++)
-
-Candidate Signatures:
-MAX_SAMPLES
-s < spp
-for (s = 0
-
-Search Platform:
-https://codesearch.debian.net
-
-Matches Found:
-mesa_26.0.1-2/src/gallium/drivers/llvmpipe/lp_state_fs.c
-mesa_26.0.1-2/src/gallium/drivers/llvmpipe/lp_state_fs.h
-mesa_26.0.1-2/src/gallium/drivers/llvmpipe/lp_setup_context.h
 
 Observation:
-Macro-based signatures like MAX_SAMPLES produce matches in unrelated
-packages such as Mesa. This suggests that simple token-level signatures
-can introduce noise. More contextual signatures (control-flow patterns
-or API combinations) may improve detection precision
 
-Observation
+The macro MAX_SAMPLES produced several matches in unrelated packages
+such as Mesa. This indicates high noise for macro-based signatures.
 
-Full-line regex signatures extracted directly from patches
-are often too specific and may fail to match similar code
-in other packages. Token-level signatures such as macro
-names (e.g. MAX_SAMPLES) produce broader matches but also
-increase noise.
+To reduce noise, we attempted a more specific signature combining the
+loop condition:
 
-This suggests the need for a multi-level signature system
-combining:
-- control-flow patterns
-- API usage
-- macro tokens
+(s < spp) && (s < MAX_SAMPLES)
+
+This produced significantly fewer matches and improved precision.
+
+This suggests that combining macro tokens with control-flow patterns
+may reduce false positives.
+
+### Second Signature Attempt
+
+Combined signature:
+
+(s < spp) && (s < MAX_SAMPLES)
+
+Search Results:
+
+Matches Found: 0
+
+Observation:
+
+The combined signature significantly reduced noise compared to the
+macro-only signature. However, no matches were found in the Debian
+archive. This suggests that the specific loop-bound fix applied in
+libtiff may be relatively unique.

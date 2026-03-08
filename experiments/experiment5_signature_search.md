@@ -55,17 +55,16 @@ Example:
 
 https://codesearch.debian.net/src/path.ts
 
-Number of matches: X
+Number of matches: 1
 
 ---
 
 ### Generalized Signature Search
 
-Matches found:
+Matches Found: 0
 
-None
-
-Number of matches: 0
+Estimated False Positives: 0  
+Estimated True Positives: 0
 
 ---
 

@@ -28,13 +28,25 @@ vips_error("csvload"
 Search Platform:
 https://codesearch.debian.net
 
-Matches Found:
-(To be tested)
+Matches Found: 0
+
+Estimated False Positives: 0  
+Estimated True Positives: 0
+
 
 Observation:
-API-based signatures such as g_str_is_ascii are more
-specific than macro-based tokens but may still appear
-in unrelated validation code across other packages.
 
-Further filtering may be needed to distinguish
-security-relevant clones from benign validation logic.
+No matches were found in the Debian archive.
+
+This suggests that validation fixes relying on project-specific APIs
+(such as g_str_is_ascii) may not generalize across unrelated codebases.
+
+This result highlights the importance of selecting signatures that
+capture generic vulnerability patterns rather than project-specific
+implementation details.
+
+Implication:
+
+Signature extraction should prioritize widely reused APIs
+or structural code patterns rather than library-specific
+functions.
