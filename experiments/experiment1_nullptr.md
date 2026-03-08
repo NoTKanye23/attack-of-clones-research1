@@ -68,3 +68,24 @@ The NULL-check–based signature produced fewer matches and appeared more precis
 This small experiment confirms that patch-derived, RE2-compatible fuzzy signatures can identify semantically similar code patterns across unrelated Debian packages.
 
 While the results are exploratory and include some noise (e.g. macro definitions or generated code), they demonstrate that security patches can serve as effective starting points for detecting cloned code at distribution scale, provided that appropriate filtering and refinement are applied.
+
+Matches Found: 4
+
+Estimated False Positives: 3
+Estimated True Positives: 1
+
+
+Manual Verification:
+
+The matches were manually inspected using the Debian CodeSearch
+links. Three results corresponded to unrelated uses of the same API
+function without the associated NULL dereference pattern. Only one
+match contained a similar control-flow structure involving explicit
+NULL checking.
+
+## Conclusion
+
+API-based signatures such as PyString_FromStringAndSize produce
+useful cross-package matches. However, API matches alone may produce
+noise. Combining API signatures with control-flow patterns (such as
+explicit NULL checks) may improve detection precision.
