@@ -16,33 +16,33 @@ def main():
 
     patch = sys.argv[1]
 
-    print("\n=== Extracting signatures ===\n")
+    print("\n Extracting signatures \n")
 
     signatures = extract_signatures_from_patch(patch)
 
-    print("\n=== Raw Signatures ===\n")
+    print("\n Raw Signatures \n")
     print(len(signatures), "signatures extracted")
 
     signatures = filter_signatures(signatures)
 
-    print("\n=== After Noise Filtering ===\n")
+    print("\n After Noise Filtering \n")
     print(len(signatures), "signatures remaining")
 
     generalized = generalize_signatures(signatures)
 
-    print("\n=== Generalized Signatures ===\n")
+    print("\n Generalized Signatures \n")
 
     for s in generalized:
         print(s)
 
     ranked = rank_signatures(generalized)
 
-    print("\n=== Ranked Signatures ===\n")
+    print("\n Ranked Signatures \n")
 
     for sig, score in ranked:
         print(f"{sig} -> score {score:.2f}")
 
-    print("\n=== Searching top signatures ===\n")
+    print("\n Searching top signatures \n")
 
     top = ranked[:5]
 
