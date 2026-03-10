@@ -6,7 +6,7 @@ from signature_filter import filter_signatures
 from signature_generalizer import generalize_signatures
 from clone_similarity import rank_candidates
 from codesearch_query import search_codesearch
-
+from patch_parser import parse_patch
 
 def main():
 
