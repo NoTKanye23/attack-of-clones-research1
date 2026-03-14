@@ -4,16 +4,23 @@ This repository contains a **prototype implementation** for the Debian GSoC proj
 
 **Attack of the Clones: Detecting Vulnerable Code Clones from Security Patches**
 
-The goal of this project is to automatically identify **clones of vulnerable code across the Debian package archive** by analyzing upstream security patches.
+The goal of this project is to automatically detect **clones of vulnerable code across the Debian package archive** by analyzing upstream security patches and searching for similar patterns in other packages.
 
 ---
 
 # Motivation
 
-When a vulnerability is fixed in an upstream project, the patch often modifies a small fragment of code.
-However, similar code fragments may exist in other projects within the Debian ecosystem.
+When a vulnerability is fixed in an upstream project, the fix often modifies a **small fragment of code**.
 
-These **vulnerability clones** can remain undetected if the fix is not propagated.
+However, similar vulnerable code may exist in other projects within the Debian ecosystem due to:
+
+* copy-paste reuse
+* shared libraries
+* derived implementations of the same logic
+
+These **vulnerability clones** can remain undetected if the fix is not propagated across all affected packages.
+
+Currently, Debian security researchers often perform **manual searches** to locate these clones.
 
 This project explores an automated workflow to:
 
@@ -70,16 +77,19 @@ The prototype currently demonstrates the **patch-to-search workflow**, which is 
 ```
 attack-of-clones/
 │
-├── attack_of_clones.py          # Main pipeline
-├── patch_parser.py              # Extract vulnerable and fix lines
+├── attack_of_clones.py          # Main pipeline entry point
+├── patch_parser.py              # Extract vulnerable and fix lines from patches
 ├── clone_detector.py            # Signature extraction logic
+├── signature_filter.py          # Remove noisy or trivial signatures
 ├── signature_ranker.py          # Ranking heuristic for signatures
-├── signature_generalizer.py     # Token generalization
-├── clone_verifier.py            # Candidate verification logic
-├── codesearch_query.py          # Debian CodeSearch queries
+├── signature_generalizer.py     # Token generalization for similarity scoring
+├── clone_similarity.py          # Similarity scoring between signatures and results
+├── clone_verifier.py            # Verification of candidate clones
+├── codesearch_query.py          # Debian CodeSearch query generation
 ├── code_tokenizer.py            # Tokenization utilities
+├── file_fetcher.py              # Fetch candidate source files
 │
-├── examples/                    # Example patches for testing
+├── experiments/                 # Experiment notes and evaluation
 └── README.md
 ```
 
@@ -90,13 +100,13 @@ attack-of-clones/
 Run the full pipeline using:
 
 ```
-python attack_of_clones.py path/to/patch.patch
+python3 attack_of_clones.py path/to/patch.patch
 ```
 
 Example:
 
 ```
-python attack_of_clones.py 88cf9dbb48f6e172629795ecffae35d5052f68aa.patch
+python3 attack_of_clones.py 88cf9dbb48f6e172629795ecffae35d5052f68aa.patch
 ```
 
 Example output:
@@ -121,7 +131,7 @@ Candidates found: 7
 
 Several exploratory experiments were conducted using real patches from the **Debian Security Tracker**.
 
-These experiments helped evaluate which types of signatures are useful for detecting vulnerability clones.
+These experiments helped evaluate which types of signatures are most effective for detecting vulnerability clones.
 
 ---
 
@@ -130,6 +140,7 @@ These experiments helped evaluate which types of signatures are useful for detec
 Tested extraction of API-based and control-flow signatures.
 
 Observation:
+
 Combining **API calls with control-flow conditions** produced meaningful archive matches.
 
 ---
@@ -143,7 +154,8 @@ MAX_SAMPLES
 ```
 
 Observation:
-Macro identifiers generate many matches but also introduce **noise** when macros are reused across unrelated projects.
+
+Macro identifiers generate many matches but can introduce **noise** when macros are reused across unrelated projects.
 
 ---
 
@@ -152,7 +164,8 @@ Macro identifiers generate many matches but also introduce **noise** when macros
 Focused on validation-related signatures.
 
 Observation:
-Project-specific APIs often **do not generalize across the Debian archive**, resulting in few matches.
+
+Project-specific APIs often **do not generalize well across the Debian archive**, resulting in few matches.
 
 ---
 
@@ -161,7 +174,8 @@ Project-specific APIs often **do not generalize across the Debian archive**, res
 Examined regex and path normalization patterns.
 
 Observation:
-Highly project-specific identifiers produce **zero matches**, demonstrating the need for signature generalization.
+
+Highly project-specific identifiers produce **zero matches**, highlighting the need for signature generalization.
 
 ---
 
@@ -189,7 +203,7 @@ Experiments used real patches from:
 * libvips validation fixes
 * rollup path normalization patches
 
-These patches were used to extract candidate vulnerability signatures and test the prototype pipeline.
+These patches were used to extract vulnerability signatures and evaluate the prototype pipeline.
 
 ---
 
@@ -221,5 +235,5 @@ The full project will extend the prototype with:
 
 # License
 
-This project is part of exploratory work for the Debian GSoC program.
+This repository contains **exploratory prototype work for the Debian GSoC program**.
 
