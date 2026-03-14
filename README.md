@@ -211,11 +211,11 @@ These patches were used to extract vulnerability signatures and evaluate the pro
 
 The prototype currently implements:
 
- Patch parsing and vulnerability classification
- Signature extraction from security patches
- Signature filtering and ranking
- Query generation for Debian CodeSearch
- Candidate clone detection logic
+Patch parsing and vulnerability classification
+Signature extraction from security patches
+Signature filtering and ranking
+Query generation for Debian CodeSearch
+Candidate clone detection logic
 
 This demonstrates the **core feasibility of patch-based vulnerability clone detection**.
 
