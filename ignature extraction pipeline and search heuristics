@@ -1,0 +1,38 @@
+[33m8c57785[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m remove embedded security-tracker repository
+[33m315f741[m improve signature extraction pipeline and search heuristics
+[33ma1cb5a1[m improve signature normalization
+[33m2763166[m Remove commented section headers in signature_filter.py
+[33m6a66b57[m Clean up comments in codesearch_query.py
+[33m1546fd0[m Clean up comments and normalize code structure
+[33mcfff8c6[m Refactor comments and clean up code structure
+[33m4f41a9a[m improve heuristic scoring of signatures
+[33mb349496[m improve filtering of noisy signatures
+[33mf0704db[m improve CodeSearch query generation strategy
+[33ma96cc54[m improve signature extraction and context pair filtering
+[33m1e9e62b[m improve patch parsing and classification heuristics
+[33m620393f[m Add patch_parser
+[33m30511bd[m Minor changes
+[33m247b03d[m Adding patch links and next steps
+[33m688001e[m Add requirements file
+[33ma551e5f[m Add MIT license
+[33md88c0ff[m Remove duplicate signature extraction module
+[33me6f17c6[m Delete preliminary_work.md
+[33m360735c[m Refactor pipeline, remove subprocess calls, improve signature extraction and CodeSearch queries
+[33mdd1329b[m Improving experiment documentation
+[33m9766f65[m Improve experiment 1 documentation
+[33mba9d8f2[m Improve experiment documentation and add summary table
+[33m57a0957[m Add experiment comparing original vs generalized signature search
+[33m0ec454c[m Add signature generalization stage and experiment 4
+[33m274ec42[m Add noise filtering stage to signature pipeline
+[33m9d5b2da[m Add signature ranking stage
+[33m36713ea[m Update experiment notes
+[33mb9a2724[m Add usage example to README
+[33mc508bca[m Update README.md
+[33m03f2396[m Add prototype pipeline section to README
+[33mf501042[m Add integrated attack-of-clones pipeline prototype
+[33mfdca241[m Update experiment notes
+[33m3c4a101[m Add prototype clone detection pipeline
+[33md1efa84[m Delete clone_detector.py
+[33m5d7834a[m Implement line extraction and regex generation
+[33m5ebca14[m Create clone_detector.py
+[33m6176e46[m Intial research experiments for Debian Attack of the Clones project
