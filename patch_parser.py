@@ -2,9 +2,8 @@ import re
 import os
 
 
-# ---------------------------------------------------------
 # Helpers
-# ---------------------------------------------------------
+
 
 def clean_line(line):
     """Normalize patch line content."""
@@ -76,10 +75,8 @@ def is_generated_file(filename):
 
     return False
 
-
-# ---------------------------------------------------------
 # Language detection
-# ---------------------------------------------------------
+
 
 def detect_language_from_filename(filename):
 
@@ -109,9 +106,7 @@ def detect_language_from_filename(filename):
     return 'unknown'
 
 
-# ---------------------------------------------------------
 # Vulnerability classification
-# ---------------------------------------------------------
 
 def _content_looks_like_js(content):
     """
@@ -147,7 +142,7 @@ def classify_patch(vulnerable_lines, fix_lines, patch_filepath=None):
 
     lang = detect_language_from_filename(patch_filepath) if patch_filepath else 'unknown'
 
-    # ── Language-first classification ─────────────────────────────────────
+    #Language-first classification
 
     if lang == 'go':
         return 'go_static'
@@ -164,7 +159,7 @@ def classify_patch(vulnerable_lines, fix_lines, patch_filepath=None):
         if 'template<' in content or (patch_filepath and patch_filepath.endswith('.h')):
             return 'c_cpp_inline'
 
-    # ── Content-based JS detection ────────────────────────────────────────
+    # Content-based JS detection 
     # Catches JS patches where the file extension wasn't captured (e.g.
     # when the last file processed was package.json or a lockfile).
 
@@ -174,7 +169,7 @@ def classify_patch(vulnerable_lines, fix_lines, patch_filepath=None):
             return 'js_bundling'
         return 'js_generic'
 
-    # ── Vulnerability pattern detection ───────────────────────────────────
+    # Vulnerability pattern detection
 
     if re.search(r'\bNULL\b|\bnullptr\b', content):
         return 'null_deref'
@@ -200,9 +195,8 @@ def classify_patch(vulnerable_lines, fix_lines, patch_filepath=None):
     return 'generic'
 
 
-# ---------------------------------------------------------
 # Patch parser
-# ---------------------------------------------------------
+
 
 def parse_patch(patch_file):
 
