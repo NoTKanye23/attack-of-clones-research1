@@ -1,3 +1,7 @@
+![Python](https://img.shields.io/badge/python-3.9+-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Status](https://img.shields.io/badge/status-research%20prototype-orange)
+
 # Attack of the Clones – Vulnerability Clone Detection Prototype
 
 This repository contains a **prototype implementation** for the Debian GSoC project idea:
@@ -31,11 +35,68 @@ This project explores an automated workflow to:
 
 ---
 
+# Quick Start
+
+## 1. Clone the repository
+
+```
+git clone https://github.com/NoTKanye23/attack-of-clones-research.git
+cd attack-of-clones-research
+```
+
+## 2. Install dependencies
+
+```
+pip install -r requirements.txt
+```
+
+## 3. Set Debian CodeSearch API key
+
+The pipeline uses the **Debian CodeSearch API**.
+
+Create an API key at:
+
+https://codesearch.debian.net/apikeys/
+
+Then export the key:
+
+```
+export DCS_API_KEY=<your_api_key>
+```
+
+## 4. Run the pipeline
+
+```
+python3 attack_of_clones.py path/to/patch.patch
+```
+
+Example:
+
+```
+python3 attack_of_clones.py examples/88cf9dbb48f6e172629795ecffae35d5052f68aa.patch
+```
+
+Example output:
+
+```
+Step 1: Extracting Signatures
+Patch type detected : bounds_check
+Vulnerable signatures : 2
+
+Step 3: Ranking Signatures
+[ 9.50] for (s = 0; s < spp; s++)
+[ 2.70] s < spp
+
+Step 4: Searching Debian Archive
+Query: MAX_SAMPLES
+Candidates found: 7
+```
+
+---
+
 # Prototype Pipeline
 
 This repository implements a **prototype pipeline** for vulnerability clone detection.
-
-Pipeline overview:
 
 ```
 Security Patch
@@ -60,6 +121,9 @@ Debian CodeSearch Query
       │
       ▼
 Candidate Clone Detection
+      │
+      ▼
+Clone Verification
 ```
 
 Core implementation entry point:
@@ -68,7 +132,7 @@ Core implementation entry point:
 attack_of_clones.py
 ```
 
-The prototype currently demonstrates the **patch-to-search workflow**, which is the key research step for detecting vulnerability clones.
+The prototype demonstrates the **patch-to-search workflow**, which is the key research step for detecting vulnerability clones.
 
 ---
 
@@ -90,39 +154,8 @@ attack-of-clones/
 ├── file_fetcher.py              # Fetch candidate source files
 │
 ├── experiments/                 # Experiment notes and evaluation
+├── architecture.md              # System architecture description
 └── README.md
-```
-
----
-
-# Example Usage
-
-Run the full pipeline using:
-
-```
-python3 attack_of_clones.py path/to/patch.patch
-```
-
-Example:
-
-```
-python3 attack_of_clones.py 88cf9dbb48f6e172629795ecffae35d5052f68aa.patch
-```
-
-Example output:
-
-```
-Step 1: Extracting Signatures
-Patch type detected : bounds_check
-Vulnerable signatures : 2
-
-Step 3: Ranking Signatures
-[ 9.50] for (s = 0; s < spp; s++)
-[ 2.70] s < spp
-
-Step 4: Searching Debian Archive
-Query: MAX_SAMPLES
-Candidates found: 7
 ```
 
 ---
@@ -135,7 +168,7 @@ These experiments helped evaluate which types of signatures are most effective f
 
 ---
 
-## 1. APT Null Pointer Vulnerability
+## 1. APT NULL Pointer Vulnerability
 
 Tested extraction of API-based and control-flow signatures.
 
@@ -190,7 +223,19 @@ NUM
 
 Observation:
 
-Generalized signatures help with **similarity scoring and ranking**, but they are too abstract to be used directly for archive search.
+Generalized signatures improve **similarity scoring and ranking**, but they are too abstract to be used directly for archive search.
+
+---
+
+# Experiment Summary
+
+| Experiment             | Signature Type         | Candidates Found | Notes                             |
+| ---------------------- | ---------------------- | ---------------- | --------------------------------- |
+| APT NULL pointer       | Control-flow + API     | 4                | Context pairs worked best         |
+| libtiff overflow       | Macro-based            | 7                | High noise due to macro reuse     |
+| libvips validation     | API-based              | 3                | High precision but low recall     |
+| rollup path patch      | Project-specific logic | 0                | Requires signature generalization |
+| generalized signatures | Abstract tokens        | many             | Useful for ranking but not search |
 
 ---
 
@@ -230,10 +275,11 @@ The full project will extend the prototype with:
 * Improved clone similarity detection
 * Large-scale scanning of the Debian package archive
 * Automated vulnerability reporting
+* Evaluation on a large dataset of Debian security patches
 
 ---
 
 # License
 
-This repository contains **exploratory prototype work for the Debian GSoC program**.
+This repository contains **exploratory prototype work for the Debian GSoC program** and is released under the MIT License.
 
