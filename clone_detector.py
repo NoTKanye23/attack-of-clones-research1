@@ -9,9 +9,8 @@ PRESERVE_TOKENS = {
 }
 
 
-# ─────────────────────────────────────────────────────────
 # Generic Extractors
-# ─────────────────────────────────────────────────────────
+
 
 def normalize_line(line):
     """Remove extra whitespace and normalize indentation."""
@@ -98,9 +97,8 @@ def extract_context_pairs(lines):
     return pairs
 
 
-# ─────────────────────────────────────────────────────────
 # Language Specific Extractors
-# ─────────────────────────────────────────────────────────
+
 
 def extract_js_signatures(lines):
     sigs = set()
@@ -167,9 +165,9 @@ def extract_c_cpp_inline_signatures(lines):
     return list(sigs)
 
 
-# ─────────────────────────────────────────────────────────
+
 # Dispatcher
-# ─────────────────────────────────────────────────────────
+
 
 def extract_signatures_from_lines(lines, patch_type='generic'):
     sigs = set()
@@ -198,9 +196,8 @@ def extract_signatures_from_lines(lines, patch_type='generic'):
     return list(sigs)
 
 
-# ─────────────────────────────────────────────────────────
 # Main Entry
-# ─────────────────────────────────────────────────────────
+
 
 def extract_signatures_from_patch(patch_file):
 
