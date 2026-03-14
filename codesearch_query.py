@@ -7,9 +7,8 @@ DCS_API_KEY = os.environ.get("DCS_API_KEY", "")
 API_BASE = "https://codesearch.debian.net/api/v1"
 
 
-# ---------------------------------------------------------
 # Query generation
-# ---------------------------------------------------------
+
 
 def build_query_variants(sig, patch_type='generic'):
     """
@@ -26,9 +25,8 @@ def build_query_variants(sig, patch_type='generic'):
 
     queries = []
 
-    # --------------------------------------------------
     # Context pair: extract best token from each half
-    # --------------------------------------------------
+    
     if " | " in sig:
         l1, l2 = sig.split(" | ", 1)
         best_l1 = _clean_for_search(l1)
@@ -38,19 +36,19 @@ def build_query_variants(sig, patch_type='generic'):
         if best_l2 and best_l2 != best_l1:
             queries.append(best_l2)
 
-    # --------------------------------------------------
+    
     # Macros (strongest anchors)
-    # --------------------------------------------------
+    
     macros = re.findall(r'\b[A-Z_]{4,}\b', sig)
     for m in macros:
         queries.append(m)
 
-    # --------------------------------------------------
+    
     # RE2 wildcard variants for comparisons
     # e.g. "s < MAX_SAMPLES" -> "[a-z_]+ < MAX_SAMPLES"
     #      "ptr == NULL"     -> "[a-z_]+ == NULL"
     # These match renamed variables while keeping the structural constraint.
-    # --------------------------------------------------
+    
     comp_matches = re.findall(
         r'([a-zA-Z_][a-zA-Z0-9_]*)\s*(==|!=|<=|>=|<|>)\s*([a-zA-Z_][a-zA-Z0-9_]*)',
         sig
@@ -63,17 +61,16 @@ def build_query_variants(sig, patch_type='generic'):
         if re.match(r'^[A-Z_]{3,}$', left):
             queries.append(f"{left} {op} [a-z_0-9]+")
 
-    # --------------------------------------------------
+    
     # Function calls
-    # --------------------------------------------------
+    
     for fc in re.findall(r'([a-zA-Z_][a-zA-Z0-9_]*)\s*\(', sig):
         skip = {"if", "for", "while", "switch", "return"}
         if fc not in skip:
             queries.append(fc + "(")
 
-    # --------------------------------------------------
     # Language-specific strategies
-    # --------------------------------------------------
+    
     if patch_type.startswith('js_'):
 
         for _, s in re.findall(r'(["\'])(.*?)\1', sig):
@@ -103,9 +100,8 @@ def build_query_variants(sig, patch_type='generic'):
         for c in re.findall(r'\b(static|dynamic|const|reinterpret)_cast', sig):
             queries.append(f"{c}_cast")
 
-    # --------------------------------------------------
     # Fallback: meaningful identifier tokens
-    # --------------------------------------------------
+    
     SKIP_TOKENS = {
         "for", "if", "while", "return", "else", "const",
         "let", "var", "new", "this", "true", "false",
@@ -117,9 +113,8 @@ def build_query_variants(sig, patch_type='generic'):
         if t not in SKIP_TOKENS and len(t) > 4:
             queries.append(t)
 
-    # --------------------------------------------------
     # Deduplicate while preserving order
-    # --------------------------------------------------
+    
     seen = set()
     unique = []
 
@@ -132,9 +127,9 @@ def build_query_variants(sig, patch_type='generic'):
     return unique
 
 
-# ---------------------------------------------------------
+
 # Signature cleanup
-# ---------------------------------------------------------
+
 
 def _clean_for_search(q):
     """
@@ -200,9 +195,8 @@ def _clean_for_search(q):
     return ""
 
 
-# ---------------------------------------------------------
 # API call
-# ---------------------------------------------------------
+
 
 def _call_api(query):
 
@@ -243,9 +237,8 @@ def _call_api(query):
         return []
 
 
-# ---------------------------------------------------------
 # Main search function
-# ---------------------------------------------------------
+
 
 def search_codesearch(signature, patch_type='generic'):
 
