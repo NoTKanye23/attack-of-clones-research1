@@ -5,6 +5,17 @@ Patch URL: https://launchpadlibrarian.net/764050984/0001-Fix-invalid-nullptr-der
 
 Affected component: python/tag.cc (APT Python bindings)
 
+## Methodology
+
+Each experiment follows the same process:
+
+1. Identify a security patch from the Debian security tracker
+2. Extract added code fragments from the patch
+3. Derive candidate fuzzy signatures
+4. Query Debian CodeSearch
+5. Manually inspect results
+6. Evaluate precision and recall
+
 ## Nature of the Vulnerability
 
 The patch fixes a potential NULL pointer dereference in the Python bindings of APT.
@@ -73,6 +84,13 @@ Matches Found: 4
 
 Estimated False Positives: 3
 Estimated True Positives: 1
+
+Manual inspection of the four matches revealed that three results were
+unrelated uses of the same API function without the associated NULL
+dereference pattern.
+
+Only one result contained a similar control-flow structure involving
+explicit NULL checking.
 
 
 Manual Verification:

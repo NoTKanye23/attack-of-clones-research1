@@ -25,6 +25,10 @@ def build_query_variants(sig, patch_type='generic'):
 
     queries = []
 
+<<<<<<< HEAD
+=======
+    
+>>>>>>> fe791d5 (improve signature extraction pipeline and search heuristics)
     # Context pair: extract best token from each half
     
     if " | " in sig:
@@ -36,7 +40,11 @@ def build_query_variants(sig, patch_type='generic'):
         if best_l2 and best_l2 != best_l1:
             queries.append(best_l2)
 
+<<<<<<< HEAD
     
+=======
+   
+>>>>>>> fe791d5 (improve signature extraction pipeline and search heuristics)
     # Macros (strongest anchors)
     
     macros = re.findall(r'\b[A-Z_]{4,}\b', sig)
@@ -69,6 +77,10 @@ def build_query_variants(sig, patch_type='generic'):
         if fc not in skip:
             queries.append(fc + "(")
 
+<<<<<<< HEAD
+=======
+    
+>>>>>>> fe791d5 (improve signature extraction pipeline and search heuristics)
     # Language-specific strategies
     
     if patch_type.startswith('js_'):
@@ -100,6 +112,10 @@ def build_query_variants(sig, patch_type='generic'):
         for c in re.findall(r'\b(static|dynamic|const|reinterpret)_cast', sig):
             queries.append(f"{c}_cast")
 
+<<<<<<< HEAD
+=======
+    
+>>>>>>> fe791d5 (improve signature extraction pipeline and search heuristics)
     # Fallback: meaningful identifier tokens
     
     SKIP_TOKENS = {
@@ -113,6 +129,10 @@ def build_query_variants(sig, patch_type='generic'):
         if t not in SKIP_TOKENS and len(t) > 4:
             queries.append(t)
 
+<<<<<<< HEAD
+=======
+    
+>>>>>>> fe791d5 (improve signature extraction pipeline and search heuristics)
     # Deduplicate while preserving order
     
     seen = set()
@@ -127,7 +147,10 @@ def build_query_variants(sig, patch_type='generic'):
     return unique
 
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> fe791d5 (improve signature extraction pipeline and search heuristics)
 # Signature cleanup
 
 
@@ -237,6 +260,10 @@ def _call_api(query):
         return []
 
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> fe791d5 (improve signature extraction pipeline and search heuristics)
 # Main search function
 
 

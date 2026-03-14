@@ -1,114 +1,225 @@
-# Attack of the Clones – Preliminary Research
+# Attack of the Clones – Vulnerability Clone Detection Prototype
 
-This repository contains exploratory work for the Debian GSoC project:
+This repository contains a **prototype implementation** for the Debian GSoC project idea:
 
 **Attack of the Clones: Detecting Vulnerable Code Clones from Security Patches**
 
-## Goal
-
-Automatically detect vulnerable code patterns across the Debian package archive by:
-
-1. Extracting security patch fragments
-2. Generating fuzzy signatures
-3. Searching the Debian archive
-4. Identifying potential vulnerable clones
-
-## Current Work
-
-- Signature extraction prototype
-- Experiments on multiple CVEs
-- Observations on noise vs precision
-
-## Preliminary Experiments
-
-To evaluate the feasibility of detecting vulnerability clones using patch-derived signatures, several preliminary experiments were conducted using real patches from the Debian Security Tracker.
-
-### 1. APT Null Pointer Vulnerability
-Tested extraction of API-based and control-flow signatures from an APT patch.  
-This experiment demonstrated that combining API signatures with control-flow conditions can produce meaningful matches in the Debian archive.
-
-### 2. libtiff Integer Overflow
-Evaluated macro-based signatures such as `MAX_SAMPLES`.  
-Results showed that macro identifiers can produce many matches, but they often introduce noise when the macro name is reused across unrelated projects.
-
-### 3. libvips Validation Logic
-Focused on validation-related signatures.  
-This experiment showed that project-specific APIs may fail to generalize across the Debian archive.
-
-### 4. rollup Regex-Based Patch
-Analyzed a patch involving path normalization and regex-related logic.  
-The experiment revealed that signatures derived from project-specific identifiers often produce zero matches, highlighting limitations of overly specific token-based signatures.
-
-### 5. Generalized Signature Experiment
-Tested a prototype generalization step where variable identifiers were replaced with abstract tokens (e.g., `VAR`, `NUM`).  
-The results showed that generalized signatures can help with ranking similarity between candidates, but they are too abstract to be used directly for archive search.
-
-These experiments informed the final prototype pipeline:
-
-Patch -> Signature Extraction -> Filtering -> Generalization -> Ranking ->  CodeSearch -> Candidate Clone Detection
-
-## Prototype Pipeline
-
-This repository implements a preliminary prototype of the
-Attack of the Clones workflow.
-
-Pipeline:
-
-Patch -> Signature Extraction (clone_detector.py) -> Signature Filtering -> Signature Generalization -> Signature Ranking -> Debian CodeSearch Query -> Candidate clone detection
-
+The goal of this project is to automatically identify **clones of vulnerable code across the Debian package archive** by analyzing upstream security patches.
 
 ---
 
-## Usage Example
+# Motivation
 
-Run the complete pipeline using:
+When a vulnerability is fixed in an upstream project, the patch often modifies a small fragment of code.
+However, similar code fragments may exist in other projects within the Debian ecosystem.
 
-```bash
+These **vulnerability clones** can remain undetected if the fix is not propagated.
+
+This project explores an automated workflow to:
+
+1. Extract vulnerability patterns from security patches
+2. Generate structural search signatures
+3. Query the Debian source archive
+4. Identify candidate vulnerable clones
+
+---
+
+# Prototype Pipeline
+
+This repository implements a **prototype pipeline** for vulnerability clone detection.
+
+Pipeline overview:
+
+```
+Security Patch
+      │
+      ▼
+Patch Parser
+      │
+      ▼
+Signature Extraction
+      │
+      ▼
+Signature Filtering
+      │
+      ▼
+Signature Generalization
+      │
+      ▼
+Signature Ranking
+      │
+      ▼
+Debian CodeSearch Query
+      │
+      ▼
+Candidate Clone Detection
+```
+
+Core implementation entry point:
+
+```
+attack_of_clones.py
+```
+
+The prototype currently demonstrates the **patch-to-search workflow**, which is the key research step for detecting vulnerability clones.
+
+---
+
+# Repository Structure
+
+```
+attack-of-clones/
+│
+├── attack_of_clones.py          # Main pipeline
+├── patch_parser.py              # Extract vulnerable and fix lines
+├── clone_detector.py            # Signature extraction logic
+├── signature_ranker.py          # Ranking heuristic for signatures
+├── signature_generalizer.py     # Token generalization
+├── clone_verifier.py            # Candidate verification logic
+├── codesearch_query.py          # Debian CodeSearch queries
+├── code_tokenizer.py            # Tokenization utilities
+│
+├── examples/                    # Example patches for testing
+└── README.md
+```
+
+---
+
+# Example Usage
+
+Run the full pipeline using:
+
+```
 python attack_of_clones.py path/to/patch.patch
 ```
 
 Example:
 
-```bash
-python attack_of_clones.py ../88cf9dbb48f6e172629795ecffae35d5052f68aa.patch.1
+```
+python attack_of_clones.py 88cf9dbb48f6e172629795ecffae35d5052f68aa.patch
 ```
 
 Example output:
 
 ```
-=== Extracting signatures ===
+Step 1: Extracting Signatures
+Patch type detected : bounds_check
+Vulnerable signatures : 2
 
-Signature: MAX_SAMPLES
+Step 3: Ranking Signatures
+[ 9.50] for (s = 0; s < spp; s++)
+[ 2.70] s < spp
 
-Searching Debian archive...
-
-Top matches:
-https://codesearch.debian.net/src/gallium/drivers/llvmpipe/lp_state_fs.c
-https://codesearch.debian.net/src/gallium/drivers/llvmpipe/lp_state_fs.h
+Step 4: Searching Debian Archive
+Query: MAX_SAMPLES
+Candidates found: 7
 ```
-## Security Patches Used in Experiments
 
-The preliminary experiments were performed on real patches from the Debian Security Tracker:
+---
 
-1. **APT nullptr vulnerability**
-   https://security-tracker.debian.org/tracker/source-package/apt
+# Preliminary Experiments
 
-2. **libtiff overflow**
-   https://security-tracker.debian.org/tracker/source-package/tiff
+Several exploratory experiments were conducted using real patches from the **Debian Security Tracker**.
 
-3. **libvips validation issue**
-   https://security-tracker.debian.org/tracker/source-package/libvips
+These experiments helped evaluate which types of signatures are useful for detecting vulnerability clones.
 
-4. **rollup path normalization patch**
-   https://github.com/rollup/rollup
+---
 
-These patches were used to extract candidate vulnerability signatures.
+## 1. APT Null Pointer Vulnerability
 
-## Next Steps
+Tested extraction of API-based and control-flow signatures.
 
-Future improvements planned for the prototype:
+Observation:
+Combining **API calls with control-flow conditions** produced meaningful archive matches.
 
-- Improve signature extraction (detect pointer misuse and boundary checks)
-- Reduce noise in CodeSearch results
-- Introduce probabilistic scoring for candidate clones
-- Explore Bloom filters or ML-based filtering for large-scale detection
+---
+
+## 2. libtiff Integer Overflow
+
+Used macro-based signatures such as:
+
+```
+MAX_SAMPLES
+```
+
+Observation:
+Macro identifiers generate many matches but also introduce **noise** when macros are reused across unrelated projects.
+
+---
+
+## 3. libvips Validation Logic
+
+Focused on validation-related signatures.
+
+Observation:
+Project-specific APIs often **do not generalize across the Debian archive**, resulting in few matches.
+
+---
+
+## 4. rollup Path Normalization Patch
+
+Examined regex and path normalization patterns.
+
+Observation:
+Highly project-specific identifiers produce **zero matches**, demonstrating the need for signature generalization.
+
+---
+
+## 5. Generalized Signature Experiment
+
+Tested replacing identifiers with abstract tokens such as:
+
+```
+VAR
+NUM
+```
+
+Observation:
+
+Generalized signatures help with **similarity scoring and ranking**, but they are too abstract to be used directly for archive search.
+
+---
+
+# Security Patches Used
+
+Experiments used real patches from:
+
+* Debian Security Tracker (APT)
+* libtiff vulnerability fixes
+* libvips validation fixes
+* rollup path normalization patches
+
+These patches were used to extract candidate vulnerability signatures and test the prototype pipeline.
+
+---
+
+# Current Status
+
+The prototype currently implements:
+
+✔ Patch parsing and vulnerability classification
+✔ Signature extraction from security patches
+✔ Signature filtering and ranking
+✔ Query generation for Debian CodeSearch
+✔ Candidate clone detection logic
+
+This demonstrates the **core feasibility of patch-based vulnerability clone detection**.
+
+---
+
+# Planned Work (GSoC Scope)
+
+The full project will extend the prototype with:
+
+* Integration with the **Debian CodeSearch API**
+* Automated retrieval of candidate source files
+* Improved clone similarity detection
+* Large-scale scanning of the Debian package archive
+* Automated vulnerability reporting
+
+---
+
+# License
+
+This project is part of exploratory work for the Debian GSoC program.
+

@@ -66,12 +66,14 @@ def filter_signatures(signatures):
         if text in NOISE_TOKENS:
             continue
 
+
         # Context pairs (highest value)
         
         if " | " in text:
             filtered.append(text)
             seen.add(text)
             continue
+
 
         # Comparisons
         
@@ -80,12 +82,14 @@ def filter_signatures(signatures):
             seen.add(text)
             continue
 
+
         # Function calls
         
         if re.search(r'[a-zA-Z_][a-zA-Z0-9_]*\s*\(', text):
             filtered.append(text)
             seen.add(text)
             continue
+
 
         # Control-flow conditions
         
@@ -94,6 +98,7 @@ def filter_signatures(signatures):
             seen.add(text)
             continue
 
+
         # Uppercase macros
         
         if re.match(r'^[A-Z_]{4,}$', text):
@@ -101,6 +106,7 @@ def filter_signatures(signatures):
                 filtered.append(text)
                 seen.add(text)
             continue
+
 
         # Token diversity check
         
