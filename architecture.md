@@ -2,191 +2,233 @@
 
 ## 1. Objective
 
-The goal of this project is to automatically detect vulnerable code clones
-across the Debian archive by transforming security patches into searchable
-signatures.
+The goal of this project is to automatically detect **vulnerable code clones**
+across the Debian source archive by transforming security patches into
+**searchable vulnerability signatures**.
 
-Security vulnerabilities are often fixed in one package but similar vulnerable
-code may still exist in other packages due to copy-paste reuse. Currently,
-Debian security researchers manually search for these patterns.
+Security vulnerabilities are often fixed in one package, but similar vulnerable
+code may still exist in other packages due to **code reuse or copy-paste
+development practices**. Currently, Debian security researchers must manually
+search for these patterns across thousands of packages.
 
-This project aims to automate this workflow.
+This project aims to **automate this workflow** by extracting vulnerability
+signatures from security patches and using them to search the Debian archive
+for potential clones.
 
 
-# 2. High Level Pipeline
 
-Security Patch
-      ↓
-Patch Collector
-      ↓
-Patch Parser
-      ↓
-Code Fragment Extraction
-      ↓
-Signature Generator
-      ↓
-Archive Search
-      ↓
-Clone Detection
-      ↓
-Filtering & Ranking
-      ↓
-Security Report
+# 2. High-Level Pipeline
+
+```
+Security Patch->Patch Collection->Patch Parsing->Code Fragment Extraction->Signature Generation->Debian CodeSearch Query->Candidate Clone Detection->Filtering & Ranking->Security Report
+```
+
 
 
 # 3. System Components
 
 ## 3.1 Patch Collector
 
-This module collects security patches from multiple sources:
+This module retrieves security patches from multiple sources, including:
 
-- Debian Security Tracker
-- Upstream git commits
-- Patch URLs referenced in CVE entries
+* Debian Security Tracker
+* Upstream Git repositories
+* Patch URLs referenced in CVE records
 
-Input:
-Patch URL or commit reference
+**Input**
 
-Output:
-Raw patch file (.patch)
+Patch URL or upstream commit reference.
+
+**Output**
+
+Raw patch file (`.patch`) used as the primary input for the analysis pipeline.
+
 
 
 ## 3.2 Patch Parser
 
-The parser extracts relevant changes from the patch.
+The patch parser processes unified diff files and extracts relevant
+modifications.
 
-Specifically it identifies:
+The parser identifies:
 
-- modified files
-- added lines (+)
-- removed lines (-)
+* modified files
+* removed lines (`-`) representing vulnerable code
+* added lines (`+`) representing the security fix
 
-Focus is placed on **added validation checks and boundary conditions**
-that correspond to vulnerability fixes.
+Focus is placed on **new validation checks, boundary conditions, or defensive
+programming constructs** that correspond to vulnerability fixes.
 
 Example extracted fragment:
 
+```
 for (s = 0; (s < spp) && (s < MAX_SAMPLES); s++)
+```
+
+These extracted fragments represent the **code context surrounding the
+vulnerability fix**.
+
+
 
 ## 3.3 Code Fragment Extraction
 
-Relevant code fragments are extracted and cleaned.
+Relevant code fragments are extracted and normalized before generating
+signatures.
 
-Filtering steps include:
+Pre-processing steps include:
 
-- removing comments
-- removing whitespace
-- ignoring test code
+* removing comments
+* normalizing whitespace
+* removing trivial syntax tokens
+* skipping test files and generated files
 
-The resulting fragments represent the vulnerability fix pattern.
+The resulting fragments capture the **semantic structure of the vulnerability
+pattern**.
+
 
 
 ## 3.4 Signature Generation
 
-Extracted fragments are converted into **search signatures**.
+Extracted fragments are converted into **searchable vulnerability signatures**.
 
-Types of signatures include:
+Multiple types of signatures are generated to improve search coverage.
 
 ### API-based signatures
 
 Example:
 
+```
 g_str_is_ascii
-
+```
 
 ### Control-flow signatures
 
 Example:
 
+```
 if (ptr == NULL)
+```
 
 ### Boundary condition signatures
 
 Example:
 
+```
 s < MAX_SAMPLES
+```
 
+### Context-pair signatures
 
-These signatures are compatible with **RE2 search engines**.
+Example:
+
+```
+const parts = path.split(ANY_SLASH_REGEX);
+while (parts[0] === '.' || parts[0] === '..')
+```
+
+These signatures are designed to be compatible with **RE2-based code search
+engines**, enabling flexible pattern matching.
 
 
 
 ## 3.5 Archive Search
 
-Generated signatures are used to search the Debian archive.
-
-Search platform:
+Generated signatures are used to query the Debian source archive using
+Debian CodeSearch:
 
 https://codesearch.debian.net
 
-The search returns candidate code fragments that resemble the
+The search returns candidate code fragments that may resemble the
 original vulnerability pattern.
+
+Multiple query variants are generated to increase recall, including:
+
+* macro constants
+* camelCase identifiers
+* wildcard expressions
+* API calls
 
 
 
 ## 3.6 Clone Detection
 
 Search results are analyzed to determine whether they represent
-potential vulnerable clones.
+**potential vulnerable clones**.
 
-Factors considered:
+Detection methods include:
 
-- syntactic similarity of code fragments
-- control-flow patterns
-- shared API calls
-- token-level similarity metrics
+* token similarity analysis
+* control-flow pattern matching
+* API call similarity
+* contextual comparison of nearby code
+
+Candidate matches are ranked using a **similarity scoring heuristic**.
 
 
 
 ## 3.7 Filtering and Ranking
 
-Raw search results may contain noise.
+Raw search results often contain noise.
 
 Filtering strategies include:
 
-- ignoring autogenerated code
-- ignoring vendored dependencies
-- filtering common macros
+* ignoring autogenerated files
+* ignoring vendored dependencies
+* removing trivial signatures
+* skipping dependency lockfiles
 
-Results are ranked based on similarity score.
+Candidates are ranked based on:
+
+* token overlap
+* contextual similarity
+* presence of vulnerability patterns
+* absence of fix patterns
 
 Future extensions may include:
 
-- Bloom filters for fast pattern pre-filtering
-- statistical ranking of matches
-- machine learning classification to separate real vulnerability clones from benign matches
+* Bloom filters for fast pre-filtering
+* statistical ranking models
+* machine-learning classifiers for clone validation
+
 
 
 ## 3.8 Reporting
 
-The final system generates a report containing:
+The system generates a report containing:
 
-- affected packages
-- file paths
-- matched code fragments
-- similarity metrics
+* affected packages
+* file paths
+* matched code fragments
+* similarity scores
+* verification status
 
-These reports can assist Debian security maintainers in identifying
-unpatched vulnerable clones across the archive.
+These reports help Debian security maintainers identify
+**potentially unpatched vulnerable clones across the archive**.
+
+
 
 ## 3.9 Limitations
 
-The intial prototype may produce fase positives because
+The initial prototype may produce **false positives**, since
 signature-based search can match unrelated code fragments.
 
-Further refinement using contextual analysis and ranking methods
-will be required to improve precision.
+Improving precision will require:
+
+* deeper contextual analysis
+* improved ranking heuristics
+* validation against the full source file
 
 
 
 # 4. Future Improvements
 
-Potential improvements after the initial prototype include:
+Potential extensions for the system include:
 
-- automated CVE ingestion
-- integration with Debian security tracker
-- AI-based clone classification
-- large-scale archive scanning
+* automated ingestion of CVE data
+* direct integration with the Debian Security Tracker
+* large-scale automated archive scanning
+* machine-learning-based clone classification
 
-These extensions could significantly improve vulnerability detection
+These improvements could significantly enhance vulnerability detection
 across the Debian ecosystem.
+
