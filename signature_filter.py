@@ -66,50 +66,44 @@ def filter_signatures(signatures):
         if text in NOISE_TOKENS:
             continue
 
-        # ─────────────────────────────
         # Context pairs (highest value)
-        # ─────────────────────────────
+        
         if " | " in text:
             filtered.append(text)
             seen.add(text)
             continue
 
-        # ─────────────────────────────
         # Comparisons
-        # ─────────────────────────────
+        
         if re.search(r'(==|!=|<=|>=|<|>)', text):
             filtered.append(text)
             seen.add(text)
             continue
 
-        # ─────────────────────────────
         # Function calls
-        # ─────────────────────────────
+        
         if re.search(r'[a-zA-Z_][a-zA-Z0-9_]*\s*\(', text):
             filtered.append(text)
             seen.add(text)
             continue
 
-        # ─────────────────────────────
         # Control-flow conditions
-        # ─────────────────────────────
+        
         if re.search(r'\b(if|for|while)\s*\(', text):
             filtered.append(text)
             seen.add(text)
             continue
 
-        # ─────────────────────────────
         # Uppercase macros
-        # ─────────────────────────────
+        
         if re.match(r'^[A-Z_]{4,}$', text):
             if not is_noise_macro(text):
                 filtered.append(text)
                 seen.add(text)
             continue
 
-        # ─────────────────────────────
         # Token diversity check
-        # ─────────────────────────────
+        
         tokens = text.split()
 
         if len(set(tokens)) == 1:
