@@ -25,12 +25,8 @@ def build_query_variants(sig, patch_type='generic'):
 
     queries = []
 
-<<<<<<< HEAD
-=======
-    
->>>>>>> fe791d5 (improve signature extraction pipeline and search heuristics)
     # Context pair: extract best token from each half
-    
+
     if " | " in sig:
         l1, l2 = sig.split(" | ", 1)
         best_l1 = _clean_for_search(l1)
@@ -40,23 +36,16 @@ def build_query_variants(sig, patch_type='generic'):
         if best_l2 and best_l2 != best_l1:
             queries.append(best_l2)
 
-<<<<<<< HEAD
-    
-=======
-   
->>>>>>> fe791d5 (improve signature extraction pipeline and search heuristics)
     # Macros (strongest anchors)
-    
+
     macros = re.findall(r'\b[A-Z_]{4,}\b', sig)
     for m in macros:
         queries.append(m)
 
-    
     # RE2 wildcard variants for comparisons
     # e.g. "s < MAX_SAMPLES" -> "[a-z_]+ < MAX_SAMPLES"
     #      "ptr == NULL"     -> "[a-z_]+ == NULL"
     # These match renamed variables while keeping the structural constraint.
-    
     comp_matches = re.findall(
         r'([a-zA-Z_][a-zA-Z0-9_]*)\s*(==|!=|<=|>=|<|>)\s*([a-zA-Z_][a-zA-Z0-9_]*)',
         sig
@@ -69,18 +58,13 @@ def build_query_variants(sig, patch_type='generic'):
         if re.match(r'^[A-Z_]{3,}$', left):
             queries.append(f"{left} {op} [a-z_0-9]+")
 
-    
     # Function calls
-    
+
     for fc in re.findall(r'([a-zA-Z_][a-zA-Z0-9_]*)\s*\(', sig):
         skip = {"if", "for", "while", "switch", "return"}
         if fc not in skip:
             queries.append(fc + "(")
 
-<<<<<<< HEAD
-=======
-    
->>>>>>> fe791d5 (improve signature extraction pipeline and search heuristics)
     # Language-specific strategies
     
     if patch_type.startswith('js_'):
@@ -93,10 +77,20 @@ def build_query_variants(sig, patch_type='generic'):
             queries.append(m)
 
         # camelCase identifiers are project-specific in JS
+        # camelCase identifiers are project-specific in JS
         camel = re.findall(r'\b[a-z][a-zA-Z0-9]*[A-Z][a-zA-Z0-9]*\b', sig)
         for c in camel:
             if len(c) > 5:
                 queries.append(c)
+
+        # JS string equality patterns: VAR[idx] === 'literal'
+        # e.g. "parts[0] === '..'" → query: === '\.\.'
+        # Highly specific to path-traversal and boundary-check logic.
+        str_eq = re.findall(r"=== '([^']{2,10})'", sig)
+        for literal in str_eq:
+            if literal not in {'.', '/', ''}:
+                escaped = re.escape(literal)
+                queries.append(f"=== '{escaped}'")
 
     elif patch_type.startswith('go_') or patch_type.startswith('rust_'):
 
@@ -112,12 +106,8 @@ def build_query_variants(sig, patch_type='generic'):
         for c in re.findall(r'\b(static|dynamic|const|reinterpret)_cast', sig):
             queries.append(f"{c}_cast")
 
-<<<<<<< HEAD
-=======
-    
->>>>>>> fe791d5 (improve signature extraction pipeline and search heuristics)
     # Fallback: meaningful identifier tokens
-    
+   
     SKIP_TOKENS = {
         "for", "if", "while", "return", "else", "const",
         "let", "var", "new", "this", "true", "false",
@@ -129,10 +119,6 @@ def build_query_variants(sig, patch_type='generic'):
         if t not in SKIP_TOKENS and len(t) > 4:
             queries.append(t)
 
-<<<<<<< HEAD
-=======
-    
->>>>>>> fe791d5 (improve signature extraction pipeline and search heuristics)
     # Deduplicate while preserving order
     
     seen = set()
@@ -147,10 +133,6 @@ def build_query_variants(sig, patch_type='generic'):
     return unique
 
 
-<<<<<<< HEAD
-
-=======
->>>>>>> fe791d5 (improve signature extraction pipeline and search heuristics)
 # Signature cleanup
 
 
@@ -232,17 +214,24 @@ def _call_api(query):
     is_regexp = bool(re.search(r'\[.*?\]|\\.|\(\?', query))
     match_mode = "regexp" if is_regexp else "literal"
 
-    try:
-        r = requests.get(
-            f"{API_BASE}/search",
-            params={"query": query, "match_mode": match_mode},
-            headers=headers,
-            timeout=15
-        )
-
-    except requests.exceptions.RequestException as e:
-        print(f"    Request error: {e}")
-        return []
+    for attempt in range(2):
+        try:
+            r = requests.get(
+                f"{API_BASE}/search",
+                params={"query": query, "match_mode": match_mode},
+                headers=headers,
+                timeout=30
+            )
+            break
+        except requests.exceptions.Timeout:
+            if attempt == 0:
+                print(f"    Timeout, retrying...")
+                continue
+            print(f"    Timed out after retry, skipping.")
+            return []
+        except requests.exceptions.RequestException as e:
+            print(f"    Request error: {e}")
+            return []
 
     if r.status_code == 403:
         print("    API key required.")
@@ -260,15 +249,54 @@ def _call_api(query):
         return []
 
 
-<<<<<<< HEAD
-=======
-
->>>>>>> fe791d5 (improve signature extraction pipeline and search heuristics)
 # Main search function
 
 
-def search_codesearch(signature, patch_type='generic'):
+# Tokens so common that searching them wastes API quota and causes timeouts.
+# These are NOT added to SKIP in _clean_for_search — they can appear in
+# multi-token queries — but are refused as standalone search queries.
+_TOO_GENERIC = {
+    "parts", "path", "part", "node", "args", "opts", "data", "item",
+    "name", "type", "list", "size", "len", "val", "buf", "ptr", "err",
+    "ret", "res", "str", "tmp", "key", "idx", "pos", "end", "out",
+    "src", "dst", "msg", "tag", "num", "obj", "arr", "map", "set",
+    # JS-specific generics
+    "shift", "push", "pop", "join", "split", "slice", "length",
+    "index", "match", "replace", "trim", "test", "exec",
+    # C generics
+    "free", "exit", "next", "prev", "root", "head", "tail",
+}
 
+# Maximum result count before we consider a query too noisy to use.
+# CodeSearch caps at 2000; anything >200 is almost certainly a generic token.
+MAX_USEFUL_RESULTS = 200
+
+
+def _is_specific_enough(query: str) -> bool:
+    """
+    Return False if a query is a single bare token that is too generic
+    to produce useful results.
+    """
+    # Multi-token or regex queries are always worth trying
+    stripped = query.strip()
+    if " " in stripped or "[" in stripped or "(" in stripped:
+        return True
+    # Single token: reject if it's a known generic or very short
+    token = re.sub(r"[()\[\]]", "", stripped)
+    if token.lower() in _TOO_GENERIC:
+        return False
+    if len(token) <= 3:
+        return False
+    return True
+
+
+def search_codesearch(signature, patch_type="generic", source_package=None):
+    """
+    Search Debian CodeSearch for the given signature.
+
+    source_package: if provided, exclude results from this package
+                    (avoids returning the patched package itself as a clone).
+    """
     queries = build_query_variants(signature, patch_type)
 
     print(f"  Trying {len(queries)} query variant(s)...")
@@ -278,13 +306,39 @@ def search_codesearch(signature, patch_type='generic'):
         if not q:
             continue
 
-        print(f"    Query: {q}")
+        if not _is_specific_enough(q):
+            print(f"    Skipping generic query: {q}")
+            continue
 
+        print(f"    Query: {q}")
         results = _call_api(q)
 
-        if results:
-            print(f"    Found {len(results)} match(es).")
-            return results[:10]
+        if not results:
+            continue
+
+        # Filter out the source package itself — it's the vulnerable one,
+        # not a clone. Match on the package name portion before the underscore.
+        if source_package:
+            pkg_prefix = source_package.split("_")[0].lower()
+            filtered = [
+                r for r in results
+                if not r.get("package", "").lower().startswith(pkg_prefix)
+            ]
+            if len(filtered) < len(results):
+                excluded = len(results) - len(filtered)
+                print(f"    (excluded {excluded} result(s) from source package)")
+            results = filtered
+
+        if not results:
+            continue
+
+        # Reject queries that match too much — they generate noise, not signal
+        if len(results) >= MAX_USEFUL_RESULTS:
+            print(f"    {len(results)} results — too noisy, trying next variant")
+            continue
+
+        print(f"    Found {len(results)} match(es).")
+        return results[:20]
 
     print("  No matches found for any query variant.")
     return []

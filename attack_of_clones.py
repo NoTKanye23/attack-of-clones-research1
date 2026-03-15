@@ -11,9 +11,11 @@ from clone_verifier import verify_from_context, is_vulnerable_clone
 
 
 def print_section(title):
-    print("\n" + "=" * 50)
+    print(f"\
+{'='*50}")
     print(f"  {title}")
-    print("=" * 50 + "\n")
+    print(f"{'='*50}\
+")
 
 
 def main():
@@ -24,10 +26,17 @@ def main():
 
     patch = sys.argv[1]
 
-    
-    # Step 1: Extract signatures
-    
+    # Derive a source package hint from the patch filename.
+    # Used to exclude the patched package itself from clone results.
+    # Git commit hashes (e.g. c60770d7.patch) give no hint → pass None.
+    import re as _re, os as _os
+    _stem = _os.path.splitext(_os.path.basename(patch))[0]
+    if _re.match(r'^[0-9a-f]{7,40}$', _stem):
+        patch_pkg_hint = None
+    else:
+        patch_pkg_hint = _stem.split('_')[0].lower() or None
 
+    # Step 1: Extract signatures 
     print_section("Step 1: Extracting Signatures")
 
     extracted = extract_signatures_from_patch(patch)
@@ -41,74 +50,65 @@ def main():
     print(f"Fix signatures        : {len(fix_sigs)}")
 
     if not vulnerable_sigs:
-        print("No vulnerable signatures found. Falling back to fix signatures.")
+        print("\
+No vulnerable signatures found. Falling back to fix signatures.")
         vulnerable_sigs = fix_sigs
 
     if not vulnerable_sigs:
-        print("No usable signatures. Exiting.")
+        print("No signatures found. Exiting.")
         return
 
-    
-    # Step 2: Filter noise
-    
-
+    #  Step 2: Filter noise 
     print_section("Step 2: Noise Filtering")
 
     filtered = filter_signatures(vulnerable_sigs)
-
     print(f"{len(filtered)} signatures remaining after filtering")
 
     if not filtered:
         print("All signatures filtered out.")
         return
 
-    
-    # Step 3: Rank signatures
-    
-
+    #  Step 3: Rank signatures 
     print_section("Step 3: Ranking Signatures")
 
     ranked = rank_signatures(filtered)
-
     for sig, score in ranked[:10]:
-        print(f"[{score:5.2f}]  {sig}")
+        print(f"  [{score:5.2f}]  {sig}")
 
-    
-    # Step 4: Search archive
-    
-
+    # Step 4: Search archive 
     print_section("Step 4: Searching Debian Archive")
 
-    search_pool = [sig for sig, _ in ranked[:5]]
+    # Search top 5 vulnerable signatures + up to 3 fix sigs as fallback
+    # Only search signatures with meaningful specificity score.
+    # Negative or near-zero scores indicate generic/noisy tokens.
+    search_pool = [sig for sig, score in ranked[:8] if score > 2.0]
+    # fix_sigs are used only for verification, not as search queries.
+    # Searching them would find already-patched code, not clones.
 
     searched = set()
-    seen_candidates = set()
-    file_cache = {}
-
+    all_results = {}
     confirmed_clones = []
-    total_candidates = 0
 
     for sig in search_pool:
 
         if sig in searched:
             continue
-
         searched.add(sig)
 
-        print(f"\nSignature: {sig}")
+        print(f"\
+Signature: {sig}")
 
-        results = search_codesearch(sig, patch_type=patch_type)
+        results = search_codesearch(sig, patch_type=patch_type, source_package=patch_pkg_hint)
 
         if not results:
             continue
 
-        total_candidates += len(results)
-
+        all_results[sig] = results
         gen_sig = generalize_signature(sig, patch_type=patch_type)
-
         ranked_candidates = rank_candidates(gen_sig, results, fix_sigs)
 
-        print("\n  Top Candidates:")
+        print("\
+  Top Candidates:")
 
         for result, sim_score in ranked_candidates[:5]:
 
@@ -116,45 +116,30 @@ def main():
             path = result.get("path", "")
             context = result.get("context", "").strip()
 
-            key = (package, path)
-
-            if key in seen_candidates:
-                continue
-
-            seen_candidates.add(key)
-
-            print(f"    [{sim_score:.3f}]  {package}/{path}")
+            print(f"    [{sim_score:.3f}]  {package} \u2014 {path}")
             print(f"            {context}")
 
-            
-            # Context verification
-            
-
-            if verify_from_context(result, sig, fix_sigs):
-
-                print("\n Context-level clone detected!")
+            # Context-based verification (no fetch needed) 
+            if verify_from_context(result, sig, fix_sigs, patch_type=patch_type):
+                print(f"\
+  \u26a0  Context-level clone detected!")
+                print(f"     Package : {package}")
+                print(f"     File    : {path}")
                 confirmed_clones.append({
                     "package": package,
                     "path": path,
                     "matched_sig": sig,
                     "verification": "context"
                 })
-
                 continue
 
-            
-            # Full file verification
-            
-
-            if key not in file_cache:
-                file_cache[key] = fetch_source_file(result)
-
-            code = file_cache[key]
-
-            if code and is_vulnerable_clone(code, sig, fix_sigs):
-
-                print("\n Full-file clone detected!")
-
+            #  Full file verification (fetch if available) 
+            code = fetch_source_file(result)
+            if code and is_vulnerable_clone(code, sig, fix_sigs, patch_type=patch_type, result_path=path):
+                print(f"\
+  \u26a0  Full-file clone detected!")
+                print(f"     Package : {package}")
+                print(f"     File    : {path}")
                 confirmed_clones.append({
                     "package": package,
                     "path": path,
@@ -162,35 +147,33 @@ def main():
                     "verification": "full_file"
                 })
 
-    
-    # Step 5: Summary
-    
-
+    #  Step 5: Summary 
     print_section("Step 5: Summary")
 
+    total_candidates = sum(len(v) for v in all_results.values())
     print(f"Patch type            : {patch_type}")
-    print(f"Signatures searched   : {len(searched)}")
+    print(f"Signatures searched   : {len(all_results)}")
     print(f"Total candidates found: {total_candidates}")
     print(f"Confirmed clones      : {len(confirmed_clones)}")
 
     if confirmed_clones:
-
-        print("\nConfirmed vulnerable clones:")
-
+        print("\
+Confirmed vulnerable clones:")
         for c in confirmed_clones:
-            print(f"[{c['verification']}]  {c['package']}/{c['path']}")
-            print(f"  Matched signature: {c['matched_sig']}")
+            print(f"  [{c['verification']}]  {c['package']} \u2014 {c['path']}")
+            print(f"    Matched: {c['matched_sig']}")
 
-    else:
-
-        print("\nNo confirmed clones found.")
-        print("The vulnerability may be unique or signatures may need refinement.")
+    if not confirmed_clones:
+        print("\
+No confirmed clones found for this patch.")
+        print("This may indicate the vulnerability is relatively unique,")
+        print("or that the signatures need further refinement.")
 
     if fix_sigs:
-        print(f"\nFix pattern ({len(fix_sigs)} signatures) was used to")
-        print("exclude already-patched candidates.")
+        print(f"\
+Fix pattern ({len(fix_sigs)} signatures) was used to")
+        print("exclude already-patched candidates from results.")
 
 
 if __name__ == "__main__":
     main()
-

@@ -113,8 +113,6 @@ def detect_language_from_filename(filename):
 
 # Vulnerability classification
 
-# Vulnerability classification
-
 
 
 def _content_looks_like_js(content):
@@ -151,11 +149,9 @@ def classify_patch(vulnerable_lines, fix_lines, patch_filepath=None):
 
     lang = detect_language_from_filename(patch_filepath) if patch_filepath else 'unknown'
 
-<<<<<<< HEAD
     #Language-first classification
-=======
+
     # Language-first classification 
->>>>>>> d87de60 (improve signature normalization)
 
     if lang == 'go':
         return 'go_static'
@@ -182,11 +178,11 @@ def classify_patch(vulnerable_lines, fix_lines, patch_filepath=None):
             return 'js_bundling'
         return 'js_generic'
 
-<<<<<<< HEAD
+
     # Vulnerability pattern detection
-=======
+
     # Vulnerability pattern detection 
->>>>>>> d87de60 (improve signature normalization)
+
 
     if re.search(r'\bNULL\b|\bnullptr\b', content):
         return 'null_deref'

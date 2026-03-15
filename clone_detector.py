@@ -108,14 +108,26 @@ def extract_js_signatures(lines):
 
         sigs.update(extract_function_calls(line))
 
-        # string literals
+        # String literals — only keep substantial, code-relevant strings.
+        # Exclude: short paths, generic config keys, npm dependency chains.
+        _SKIP_STRINGS = {
+            "./utils/path", "../utils/path", "node:path", "node:fs",
+            "node:url", "node:os", "node:crypto", "./utils", "../utils",
+        }
         for _, s in re.findall(r'(["\'])(.*?)\1', line):
-            if len(s) > 4 and not s.isdigit():
+            if (len(s) > 8
+                    and not s.isdigit()
+                    and s not in _SKIP_STRINGS
+                    and '|' not in s
+                    and not s.startswith('.')
+                    and not re.match(r'^[a-z][a-z0-9-]+$', s)
+                    ):
                 sigs.add(f'"{s}"')
 
-        if '&&' in line or '||' in line:
-            cond = re.sub(r'[a-zA-Z_][a-zA-Z0-9_]*', 'VAR', line)
-            sigs.add(cond)
+        # Boolean conditions: add the ORIGINAL line, not VAR-substituted.
+        # VAR substitution is for similarity scoring only (signature_generalizer).
+        if ('&&' in line or '||' in line) and len(line.strip()) > 10:
+            sigs.add(line.strip())
 
         modules = re.findall(
             r'(?:require|import)\s*\(?\s*[\'"]([^\'"]+)[\'"]',
@@ -163,7 +175,6 @@ def extract_c_cpp_inline_signatures(lines):
         sigs.update(extract_comparisons(line))
 
     return list(sigs)
-
 
 
 # Dispatcher
