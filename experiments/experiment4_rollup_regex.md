@@ -1,4 +1,4 @@
-# Experiment 4: Rollup Regex Vulnerability
+# Experiment 4: Rollup Path Normalization Vulnerability
 
 Patch Source:
 CVE-2026-27606
@@ -7,58 +7,153 @@ Repository:
 rollup
 
 Bug Type:
-Regular expression vulnerability
+Path normalization / directory traversal logic
 
 Patch Link:
 https://github.com/rollup/rollup/commit/c60770d7aaf750e512c1b2774989ea4596e660b2
 
-Patch Fragment Extracted:
+---
 
-if (normalized.length > 0 && normalized[normalized.length - 1] !== '..')
+## Patch Fragment Extracted
 
-Candidate Signatures:
+Example fragment extracted from the patch:
 
-normalized.length
-normalized[normalized.length - 1] !== '..'
-PATH_TRAVERSAL
-isFileNameOutsideOutputDirectory
+```javascript
+while (parts[0] === '.' || parts[0] === '..') {
+    const part = parts.shift();
+}
+```
 
-Search Platform:
+Another relevant fragment:
+
+```javascript
+if (!firstPathSegment) {
+    return '/';
+}
+```
+
+These fragments represent logic related to **path normalization and traversal handling**.
+
+---
+
+## Candidate Signatures Generated
+
+The prototype pipeline extracted several structural signatures from the patch.
+
+Examples include:
+
+```
+while (parts[0] === '.' || parts[0] === '..')
+const parts = path.split(ANY_SLASH_REGEX)
+const firstPathSegment = paths.shift()
+if (!firstPathSegment)
+ANY_SLASH_REGEX
+```
+
+Context-pair signatures were also generated, for example:
+
+```
+const parts = path.split(ANY_SLASH_REGEX) | while (parts[0] === '.' || parts[0] === '..')
+```
+
+These signatures capture both **individual operations and multi-line structural patterns**.
+
+---
+
+## Search Platform
+
+Debian CodeSearch
+
 https://codesearch.debian.net
 
-Matches Found: 0
+The prototype uses the Debian CodeSearch API to query the Debian source archive using generated signatures.
 
-Estimated False Positives: 0  
-Estimated True Positives: 0
+---
 
-Observation:
-Regex-related signatures produced several matches but also
-introduced noise due to common regex handling patterns in
-JavaScript tooling.
+## Search Results
 
-The extracted identifiers (FILE_NAME_OUTSIDE_OUTPUT_DIRECTORY,
-ANY_SLASH_REGEX) are highly project-specific and do not appear
-in other Debian packages.
+Total candidate matches retrieved from Debian CodeSearch:
+≈ 60 candidate fragments
 
-This results in zero matches in Debian Code Search.
+Example candidate packages identified:
 
-This experiment highlights a limitation of token-based
-signatures: they may be overly specific and fail to detect
-similar vulnerabilities across unrelated codebases.
+* node-rollup
+* docker.io
+* gitaly
+* symfony
+* simplesamlphp
 
-Future work could attempt to extract more generalized
-patterns such as path normalization logic or control-flow
-structures instead of project-specific identifiers.
+Example matched fragment:
 
-This suggests that an effective clone detection pipeline should
-combine multiple signature types (tokens, control-flow patterns,
-and API usage) and rank them by their generality to balance
-precision and recall.
+```
+tenant, err := firstPathSegment(u)
+```
 
-Implication:
+These matches were retrieved using query tokens such as:
 
-Regex-based signatures are unlikely to detect cross-project
-vulnerability clones unless the underlying logic appears
-in multiple codebases.
+```
+firstPathSegment
+ANY_SLASH_REGEX
+resolvedParts
+```
 
+---
+
+## Clone Verification
+
+All candidates were passed through the verification stage.
+
+Verification checks:
+
+1. Presence of the vulnerable pattern
+2. Absence of the fix pattern
+3. Token similarity between the patch and candidate fragment
+
+After verification:
+
+Confirmed vulnerable clones: **0**
+
+---
+
+## Observation
+
+Although several candidate fragments were retrieved, none satisfied the full verification criteria.
+
+The primary reason is that the vulnerability logic relies on **project-specific identifiers**, including:
+
+```
+ANY_SLASH_REGEX
+firstPathSegment
+resolvedParts
+```
+
+These identifiers rarely appear in other projects within the Debian archive.
+
+As a result, the extracted signatures are **highly specific to the Rollup codebase**, limiting cross-project clone detection.
+
+---
+
+## Implication
+
+This experiment demonstrates an important limitation of signature-based clone detection.
+
+Highly project-specific identifiers reduce the likelihood of detecting clones across unrelated projects.
+
+Effective vulnerability clone detection therefore requires a combination of:
+
+* token-based signatures
+* control-flow signatures
+* generalized structural patterns
+
+Balancing **precision and generality** is critical for achieving useful results.
+
+---
+
+## Conclusion
+
+The Rollup experiment highlights a case where the vulnerability is strongly tied to project-specific implementation details.
+
+While the search pipeline successfully retrieved candidate fragments, no confirmed vulnerable clones were identified after verification.
+
+This suggests that additional generalization techniques may be necessary when analyzing patches that rely on project-specific identifiers.
 

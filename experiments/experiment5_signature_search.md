@@ -1,43 +1,64 @@
-# Experiment 5: Original vs Generalized Signature Search
+# Experiment 5 – Original vs Generalized Signature Search
 
 ## Objective
 
-Evaluate the effect of signature generalization on Debian code search results.
+This experiment evaluates the impact of **signature generalization** on archive search results.
 
-Specifically we compare:
+Two types of signatures are compared:
 
-1. Original signature extracted from patch
-2. Generalized signature produced by the pipeline
+1. **Original signatures** extracted directly from the security patch
+2. **Generalized signatures** produced by the prototype pipeline through token abstraction
 
-The goal is to understand how abstraction affects search recall and noise.
+The goal is to understand how abstraction affects **search recall, precision, and noise** when querying the Debian source archive.
 
 ---
 
 ## Patch Source
 
-CVE: CVE-2026-27606  
-Project: rollup  
-Commit: c60770d7aaf750e512c1b2774989ea4596e660b2
+CVE:
+CVE-2026-27606
+
+Project:
+rollup
+
+Commit:
+c60770d7aaf750e512c1b2774989ea4596e660b2
 
 ---
 
 ## Original Signature
 
-Example extracted line:
+Example fragment extracted directly from the patch:
 
+```javascript
 if (normalized.length > 0 && normalized[normalized.length - 1] !== '..')
+```
+
+This signature preserves the **exact identifiers and structure** used in the original code.
 
 ---
 
 ## Generalized Signature
 
-After token generalization:
+After token generalization performed by the pipeline, the pattern becomes:
 
+```
 VAR (VAR.VAR > NUM && VAR[VAR.VAR - NUM] NEQ 'PATH_TRAVERSAL')
+```
+
+Generalization replaces specific identifiers with abstract tokens such as:
+
+* `VAR` – variable identifiers
+* `NUM` – numeric constants
+* symbolic operators representing comparisons
+
+The purpose of generalization is to capture **structural similarity** rather than exact token matches.
 
 ---
 
 ## Search Platform
+
+Debian CodeSearch
 
 https://codesearch.debian.net
 
@@ -47,51 +68,90 @@ https://codesearch.debian.net
 
 ### Original Signature Search
 
-Matches found:
+Number of matches found: **1**
 
-- (record URLs returned by search)
-
-Example:
+Example result:
 
 https://codesearch.debian.net/src/path.ts
 
-Number of matches: 1
+These results correspond to code that closely resembles the original fragment.
 
 ---
 
 ### Generalized Signature Search
 
-Matches Found: 0
+Matches found: **0**
 
-Estimated False Positives: 0  
-Estimated True Positives: 0
+Estimated false positives: **0**
+Estimated true positives: **0**
 
 ---
 
 ## Observation
 
-Aggressive token generalization produces abstract patterns that are not
-directly searchable using text-based code search engines.
+Aggressive token generalization produces abstract patterns that cannot be used directly with **text-based code search engines** such as Debian CodeSearch.
 
-While generalized signatures help identify structural vulnerability
-patterns, they reduce recall when used directly as search queries.
+Since CodeSearch performs lexical matching, generalized patterns such as:
+
+```
+VAR (VAR.VAR > NUM ...)
+```
+
+do not correspond to literal text present in source files.
+
+As a result, generalized signatures are ineffective when used directly as search queries.
 
 ---
 
 ## Insight
 
-A hybrid strategy may be required:
+Despite their limitations for archive search, generalized signatures remain valuable for **post-search analysis**.
 
-1. Use **original signatures for archive search**
-2. Use **generalized signatures for ranking and similarity scoring**
+A practical approach is to use generalized signatures during later stages of the pipeline, such as:
 
-This approach preserves search recall while enabling structural
-pattern detection.
+* candidate verification
+* structural similarity comparison
+* ranking of potential vulnerability clones
 
 ---
 
-## Implication for Attack-of-Clones System
+## Implication for the Attack-of-Clones System
 
-Future system architecture may combine:
+The experiment suggests a hybrid architecture:
 
-Patch -> Original signature search -> Candidate matches -> Generalized pattern matching -> Similarity scoring -> Ranked vulnerability clones
+```
+Patch
+   ↓
+Original signature extraction
+   ↓
+Archive search (CodeSearch)
+   ↓
+Candidate retrieval
+   ↓
+Generalized pattern matching
+   ↓
+Similarity scoring
+   ↓
+Ranked vulnerability clones
+```
+
+In this design:
+
+* **original signatures** maximize search recall
+* **generalized signatures** improve structural comparison and ranking
+
+---
+
+## Conclusion
+
+Generalized signatures are not suitable for direct archive search using lexical code search engines.
+
+However, they are valuable for **structural comparison and clone similarity analysis**.
+
+Combining both approaches allows the system to balance:
+
+* **search recall** (using original signatures)
+* **structural matching and ranking** (using generalized signatures)
+
+This hybrid approach provides a more effective strategy for detecting vulnerability clones across large software archives.
+
