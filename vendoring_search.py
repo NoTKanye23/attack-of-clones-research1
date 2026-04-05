@@ -12,6 +12,7 @@ KNOWN_VENDOR_DIRS = {
     "libtiff", "libwebp", "libvpx", "libopus", "libvorbis",
     "jansson", "cjson", "yajl", "rapidjson", "nlohmann",
     "mbedtls", "wolfssl", "botan",
+    "minizip"
     # JS/Node libraries
     "lodash", "underscore", "moment", "axios", "node-fetch",
     "rollup", "webpack", "esbuild", "parcel",
