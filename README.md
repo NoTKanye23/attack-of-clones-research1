@@ -184,7 +184,7 @@ candidate similarity, never for CodeSearch query generation.
 
 ## Preliminary Experiments
 
-Five experiments across real CVEs established the key findings:
+Six experiments across real CVEs established the key findings:
 
 | Experiment | CVE / Source | Type | Matches | Key Finding |
 |---|---|---|---|---|
@@ -193,6 +193,7 @@ Five experiments across real CVEs established the key findings:
 | E3: libvips | CVE-2026-3147 | input_validation | 1 | Project-specific APIs rarely generalize |
 | E4: rollup | CVE-2026-27606 | js_bundling | 0 (after fixes) | Language cross-check eliminated 2 FP |
 | E5: generalization | CVE-2026-27606 | abstraction | 0 | VAR sigs unusable for search |
+| E6: zlib minizip | CVE-2023-45853 | bounds_check | 3 confirmed | Filename search recovers Type-1 clones in 1 API call |
 
 ### Seven Key Findings
 
