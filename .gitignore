@@ -6,3 +6,8 @@ security-tracker/
 *.tar.xz
 *.orig.tar.*
 qtbase-*/
+*.tar.xz
+*.orig.tar.*
+qtbase-*/
+qtbase-everywhere-src-*/
+qt6-base-*/
