@@ -156,7 +156,7 @@ zlib. zlib-ng may or may not share the vulnerable code path. Needs separate chec
 
 ### All others — LIKELY TRUE POSITIVES
 Packages with paths containing `zlib-1.3.1`, `zlib-1.3.0`, or unversioned `zlib/`
-subdirectories are likely vulnerable. CVE scope is "zlib before 1.3.2".
+subdirectories are likely vulnerable. CVE scope is "zlib before 1.3.2"
 
 ---
 
