@@ -1,8 +1,0 @@
-if(NOT TARGET Qt::Widgets)
-    return()
-endif()
-qt_internal_add_example(tutorial1)
-qt_internal_add_example(tutorial2)
-qt_internal_add_example(tutorial3)
-qt_internal_add_example(tutorial4)
-qt_internal_add_example(tutorial5)

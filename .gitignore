@@ -3,3 +3,6 @@ __pycache__/
 *.pyc
 *.patch
 security-tracker/
+*.tar.xz
+*.orig.tar.*
+qtbase-*/

@@ -1,2 +1,0 @@
-# Generated from machtest.pro.
-

@@ -1,8 +1,0 @@
-[stackWidgetOpaqueChildIsVisible]
-windows-10 msvc-2017
-
-# QTBUG-87436
-[clearAndGrab]
-android
-[stackWidgetOpaqueChildIsVisible]
-android
