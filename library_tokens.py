@@ -157,7 +157,7 @@ def get_library_tokens(filename_stem: str,
                         If None, returns only wildcard tokens.
  
     Returns:
-        List of (token, filetype, path_hint) tuples, deduplicated.
+        List of (token, filetype, path_hint) tuples, deduplicated
     """
     stem = filename_stem.lower()
     fn_map = LIBRARY_FUNCTION_TOKENS.get(stem, {})

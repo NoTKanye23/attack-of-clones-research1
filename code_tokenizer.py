@@ -9,7 +9,7 @@ C_KEYWORDS = {
 
 def tokenize_code(code):
     """
-    Extract meaningful tokens from code.
+    Extract meaningful tokens from code
 
     Returns a set of normalized tokens used for
     similarity scoring and clone detection.

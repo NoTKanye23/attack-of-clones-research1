@@ -1,7 +1,6 @@
 import re
 import os
 
-
 # Helpers
 
 def clean_line(line):

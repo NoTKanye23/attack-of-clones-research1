@@ -154,7 +154,7 @@ def extract_vendoring_signals(patch_file: str) -> list[dict]:
 def _is_distinctive_filename(filename: str) -> bool:
     """
     Return True if a filename is specific enough to use as a literal
-    CodeSearch query and likely to return only a small set of results.
+    CodeSearch query and likely to return only a small set of results
     """
     code_extensions = {
         ".c", ".cpp", ".cc", ".cxx", ".h", ".hpp",

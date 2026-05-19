@@ -18,7 +18,7 @@ def score_signature(sig):
             return 0.0
         score = 0.0
 
-        # CPVDetector: context pairs are the highest-value signal
+        # CPVDetector:context pairs are the highest-value signal
         if " | " in sig:
             score += 6.0
 

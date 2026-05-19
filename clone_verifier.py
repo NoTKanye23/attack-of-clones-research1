@@ -86,8 +86,8 @@ def _mvp_c1_check(vuln_sig: str, candidate_text: str) -> bool:
 def contains_vulnerable_pattern(code: str, vuln_sig: str) -> bool:
     """
     Two-stage matching:
-    Stage 1 — MVP C1: token prerequisite check.
-    Stage 2 — fuzzy: normalized exact match, then token overlap on abstracted text.
+    Stage 1 - MVP C1: token prerequisite check.
+    Stage 2 - fuzzy: normalized exact match, then token overlap on abstracted text.
     """
     # C1 fast gate
     if not _mvp_c1_check(vuln_sig, code):

@@ -9,7 +9,7 @@ API_BASE = "https://codesearch.debian.net/api/v1"
  
 def build_query_variants(sig, patch_type='generic'):
     """
-    Generate search queries ordered from most specific to least specific.
+    Generate search queries ordered from most specific to least specific
     """
     queries = []
  

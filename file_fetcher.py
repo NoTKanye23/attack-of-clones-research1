@@ -48,7 +48,7 @@ def normalize_path(path):
 def fetch_source_file(result_dict):
     """
     Fetch raw source file from sources.debian.org
-    using Debian CodeSearch result fields.
+    using Debian CodeSearch result fields
     """
     package_field = result_dict.get("package")
     path = result_dict.get("path")

@@ -1,7 +1,6 @@
 import re
 from clone_detector import PRESERVE_TOKENS
 
-
 MACRO_PATTERN = re.compile(r'[A-Z][A-Z0-9_]{3,}')
 IDENTIFIER_PATTERN = re.compile(r'[a-zA-Z_][a-zA-Z0-9_]*')
 

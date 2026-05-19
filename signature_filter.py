@@ -55,7 +55,7 @@ def _is_standalone_generic_call(text: str) -> bool:
 
 def _is_pure_commentary(text: str) -> bool:
     """
-    MVP: reject if prose phrase present AND no code structure characters.
+    MVP: reject if prose phrase present AND no code structure characters
     Code chars: = ( ) { } ; < >
     A commentary line with an embedded function call is NOT pure commentary.
     """

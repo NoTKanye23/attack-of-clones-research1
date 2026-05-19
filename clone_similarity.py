@@ -1,6 +1,5 @@
 import re
 
-
 def tokenize(text):
     tokens = re.findall(r'[A-Za-z_][A-Za-z0-9_]*', text)
     return set(t for t in tokens if len(t) > 1)

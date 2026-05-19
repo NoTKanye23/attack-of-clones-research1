@@ -34,7 +34,7 @@ def _dedupe_results(results):
  
 def _best_vulnerable_signature(sigs):
     """
-    Pick the most code‑like vulnerable signature from a list.
+    Pick the most code‑like vulnerable signature from a list
     Favours longer signatures with code characters and penalises prose phrases.
     """
     if not sigs:
